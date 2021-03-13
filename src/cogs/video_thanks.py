@@ -19,10 +19,11 @@ MESSAGES = [
     "Jeepers creepers, another top notch video there old chum!",
     "Holy guacamole! I LOOOOOOOOVE IT!",
     "I am forever indebted to you for this glorious video!",
-    "You can't just keep coming at me with these incredible vids. I don't think I can take much more..."
+    "You can't just keep coming at me with these incredible vids. I don't think I can take much more...",
 ]
 
 EMOJI = "\U0001F913"
+
 
 class VideoThanks(commands.Cog):
     def __init__(self, bot):
@@ -43,14 +44,10 @@ class VideoThanks(commands.Cog):
             if self._has_video(message.content):
                 # add emoji reaction and reply
                 await message.add_reaction(EMOJI)
-                await message.reply(
-                    random.choice(MESSAGES)
-                )
+                await message.reply(random.choice(MESSAGES))
 
 
 def setup(bot):
-    bot.add_cog(
-        VideoThanks(bot)
-    )
+    bot.add_cog(VideoThanks(bot))
 
     return

@@ -9,9 +9,7 @@ import cogs
 
 class EBot(commands.Bot):
     def __init__(self):
-        super().__init__(
-            command_prefix=".e ", activity=discord.Game(name="Loading...")
-        )
+        super().__init__(command_prefix=".e ", activity=discord.Game(name="Loading..."))
         self.logging = logging.getLogger(__name__)
 
     def load_all_available_cogs(self):

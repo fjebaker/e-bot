@@ -15,7 +15,7 @@ class DynamicLoad(commands.Cog):
         self.logging.info("Reloading cogs...")
 
         _reloaded = []
-        cogs = [i for i in self.bot.extensions.keys()] # local copy
+        cogs = [i for i in self.bot.extensions.keys()]  # local copy
         for cog in cogs:
             if cog == __name__:
                 # skip

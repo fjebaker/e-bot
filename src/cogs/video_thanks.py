@@ -15,7 +15,7 @@ MESSAGES = [
     "Hahahaha! I especially liked the bit just before the middle.",
     "This is great! Where do you find all these things?",
     "Good golly, this was another fantastic video! Thanks!",
-    "This is absolutely blowing my mind! Love it!"
+    "This is absolutely blowing my mind! Love it!",
     "Jeepers creepers, another top notch video there old chum!",
     "Holy guacamole! I LOOOOOOOOVE IT!",
     "I am forever indebted to you for this glorious video!",

@@ -29,12 +29,9 @@ class VideoThanks(commands.Cog):
         self.bot = bot
         self.logging = logging.getLogger(__name__)
 
-    def _has_video(self, embeds):
-        """ returns True if any of the embeds has a YouTube url """
-        for em in embeds:
-            if re.search(r"www\.youtube.", em.url) is not None:
-                return True
-        return False
+    def _has_video(self, content):
+        """ returns True if message has a YouTube url """
+        return re.search(r"www\.youtube\.com", content) is not None
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -43,7 +40,7 @@ class VideoThanks(commands.Cog):
             # skip bot messages
             ...
         else:
-            if self._has_video(message.embeds):
+            if self._has_video(message.content):
                 # add emoji reaction and reply
                 await message.add_reaction(EMOJI)
                 await message.reply(

@@ -50,8 +50,8 @@ class XtianServer(commands.Cog):
         """
         for word in CENSORED_WELL:
             if content.find(word) != -1:
-                return true
-        return false
+                return True
+        return False
 
     @commands.Cog.listener()
     async def on_message(self, message):

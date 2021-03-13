@@ -14,7 +14,12 @@ MESSAGES = [
     "Oh my god! This made me literally LoL (Laugh out Loud)!",
     "Hahahaha! I especially liked the bit just before the middle.",
     "This is great! Where do you find all these things?",
-    "Good golly, this was another fantastic video! Thanks!"
+    "Good golly, this was another fantastic video! Thanks!",
+    "This is absolutely blowing my mind! Love it!"
+    "Jeepers creepers, another top notch video there old chum!",
+    "Holy guacamole! I LOOOOOOOOVE IT!",
+    "I am forever indebted to you for this glorious video!",
+    "You can't just keep coming at me with these incredible vids. I don't think I can take much more..."
 ]
 
 EMOJI = "\U0001F913"
@@ -44,7 +49,7 @@ class VideoThanks(commands.Cog):
                 await message.reply(
                     random.choice(MESSAGES)
                 )
-    
+
 
 def setup(bot):
     bot.add_cog(

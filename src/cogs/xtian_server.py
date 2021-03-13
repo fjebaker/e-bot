@@ -8,33 +8,34 @@ import re
 
 COG_HELP = """ No help available for this cog. """
 
+EMOJIS = [
+    "\U0001F47F",
+    "\U0001F6D1",
+    "\U000026EA",
+    "\U00002626"
+]
+
+CENSORED_WELL = [
+    "heck",
+    "darn",
+    "drat",
+    "devil",
+    "lewd",
+    "wtf",
+    "frick",
+    "ffs",
+    "shizzle",
+    "bum",
+    "butt",
+    "pee",
+    "poo",
+    "ankle"
+]
+
+RUDE_MESSAGE = "Please do not swear; this is a wholesome, family-friendly christian server thank you very much."
+
+
 class XtianServer(commands.Cog):
-
-    emojis = [
-        "\U0001F47F",
-        "\U0001F6D1",
-        "\U000026EA",
-        "\U00002626"
-    ]
-
-    censored_words = [
-        "heck",
-        "darn",
-        "drat",
-        "devil",
-        "lewd",
-        "wtf",
-        "frick",
-        "ffs",
-        "shizzle",
-        "bum",
-        "butt",
-        "pee",
-        "poo",
-        "ankle"
-    ]
-
-    rude_message = "Please do not swear; this is a wholesome, family-friendly christian server thank you very much."
 
     def __init__(self, bot):
         self.bot = bot
@@ -47,7 +48,7 @@ class XtianServer(commands.Cog):
         :param content: string, the content string to check for censored words
         :return: true if any words in CENSORED_WORDS are in the content string, false otherwise.
         """
-        for word in self.censored_words:
+        for word in CENSORED_WELL:
             if content.find(word) != -1:
                 return true
         return false
@@ -60,10 +61,10 @@ class XtianServer(commands.Cog):
         else:
             if self._contains_cuss(message.content):
                 # add emoji reaction
-                for emoji in self.emojis:
+                for emoji in EMOJIS:
                     await message.add_reaction(emoji)
                 await message.reply(
-                    self.rude_message
+                    RUDE_MESSAGE
                 )
 
 

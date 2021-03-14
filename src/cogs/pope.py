@@ -3,12 +3,19 @@ import logging
 import discord
 from discord.ext import commands
 
+import random
 import re
 
-POPE_URI = "https://cdn.cnn.com/cnnnext/dam/assets/180118223304-papa-francisco-chile-peru-choque-caballo-mujer-flores-amazonia-minutofrancisco-18-enero-18-pm-00000230-large-169.jpg"
+import os
+from econfig import PATH_EXTENSION
 
-class RowanReactor(commands.Cog):
+# load uri array
+POPE_URIS = []
+with open(os.path.join(PATH_EXTENSION, "data/popelist.txt"), "r") as f:
+    POPE_URIS = [i for i in f.read().split("\n") if i != ""]
 
+
+class PopeImage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logging = logging.getLogger(__name__)
@@ -24,13 +31,10 @@ class RowanReactor(commands.Cog):
             ...
         else:
             if self._has_pope(message.content):
-                await message.reply(
-                    POPE_URI
-                )
-        
+                await message.reply(random.choice(POPE_URIS))
+
+
 def setup(bot):
-    bot.add_cog(
-        RowanReactor(bot)
-    )
+    bot.add_cog(PopeImage(bot))
 
     return

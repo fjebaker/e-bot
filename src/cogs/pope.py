@@ -8,8 +8,9 @@ import re
 
 # load uri array
 POPE_URIS = []
-with open("../data/popelist.txt", "r") as f:
-    POPE_URIS = [i for i in f.read().split("\n,") if i != ""]
+with open("./data/popelist.txt", "r") as f:
+    POPE_URIS = [i for i in f.read().split("\n") if i != ""]
+
 
 class PopeImage(commands.Cog):
 

@@ -6,14 +6,16 @@ from discord.ext import commands
 import random
 import re
 
+import os
+from econfig import PATH_EXTENSION
+
 # load uri array
 POPE_URIS = []
-with open("./data/popelist.txt", "r") as f:
+with open(os.path.join(PATH_EXTENSION, "data/popelist.txt"), "r") as f:
     POPE_URIS = [i for i in f.read().split("\n") if i != ""]
 
 
 class PopeImage(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logging = logging.getLogger(__name__)
@@ -29,13 +31,10 @@ class PopeImage(commands.Cog):
             ...
         else:
             if self._has_pope(message.content):
-                await message.reply(
-                    random.choice(POPE_URIS)
-                )
-        
+                await message.reply(random.choice(POPE_URIS))
+
+
 def setup(bot):
-    bot.add_cog(
-        PopeImage(bot)
-    )
+    bot.add_cog(PopeImage(bot))
 
     return

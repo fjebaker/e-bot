@@ -65,6 +65,7 @@ class XtianServer(commands.Cog):
         listString = "\n".join(CENSORED_WORDS)
         await context.send(f"Current cuss list:\n{listString}")
 
+
 def setup(bot):
     bot.add_cog(XtianServer(bot))
 

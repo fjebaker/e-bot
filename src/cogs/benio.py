@@ -6,7 +6,7 @@ from discord.ext import commands
 import os
 from econfig import PATH_EXTENSION
 
-_ID = 691729794462908487
+_ID = 462721725520543764
 FILE = os.path.join(PATH_EXTENSION, "data/benmessages.txt")
 
 
@@ -17,12 +17,12 @@ class BenIO(commands.Cog):
 
     def _append_message(self, content):
         with open(FILE, "a") as f:
-            f.write(f"\n\ncontent")
+            f.write(f"\n\n{content}")
 
     @commands.Cog.listener()
     async def on_message(self, message):
         self.logging.info(f"{message.author.name}, {message.author.id}")
-        if message.author.name == "shellywell123":
+        if message.author.id == _ID:
             self._append_message(message.content)
 
 

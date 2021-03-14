@@ -7,7 +7,7 @@ import os
 from econfig import PATH_EXTENSION
 
 _ID = 691729794462908487
-FILE = os.path.join(PATH_EXTENSION, "benmessages.txt")
+FILE = os.path.join(PATH_EXTENSION, "data/benmessages.txt")
 
 
 class BenIO(commands.Cog):

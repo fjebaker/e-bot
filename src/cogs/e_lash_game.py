@@ -9,13 +9,19 @@ from utils.lookups import EMOJI_NUM
 import itertools
 import random
 import collections
+import os
+
+from econfig import PATH_EXTENSION
 
 COG_HELP = """
     TODO
 """
 
 PROMPTS_PER_ROUND = 2
+MIN_PLAYERS = 3
 WAIT_DURATION = 5  # time to show info in seconds
+SCRAPE_CHANNEL = "elash-prompts"
+FILE = os.path.join(PATH_EXTENSION, "data/prompts.txt")
 
 
 def randomize_prompts(prompts: list):
@@ -42,9 +48,39 @@ class EepLash(EGame):
             title="E Lash", description=text, colour=discord.Colour.red()
         )
 
+    def _has_prompts(self):
+        if os.path.isfile(FILE):
+            with open(FILE, "r") as f:
+                self.prompt_list = [i for i in f.read().split("\n") if i is not ""]
+            return len(self.prompt_list) > 0
+        else:
+            self.logging.error(f"No prompt file {FILE}.")
+            return False
+
+    async def _scrape_prompts(self, context):
+        channel = next(
+            filter(lambda c: c.name == SCRAPE_CHANNEL, context.guild.channels)
+        )
+
+        prompts = []
+        async for message in channel.history(limit=1000):
+            try:
+                prompts.append(
+                    message.content.replace("{blank}", "_" * 5).replace(
+                        "{the current year}", "the current year"
+                    )
+                )
+            except Exception as e:
+                self.logging.error(f"Prompt scrape error: {e}")
+
+        with open(FILE, "w") as f:
+            f.write("\n".join(prompts))
+
+        return len(prompts)
+
     async def execute_round(self):
         # get prompts for round
-        prompts = {i: f"test {i}" for i in range(len(self.players))}
+        prompts = {i: random.choice(self.prompt_list) for i in range(len(self.players))}
         ordering = randomize_prompts(prompts.keys())
 
         # announce new round
@@ -91,7 +127,7 @@ class EepLash(EGame):
 
         result = await self.titlemenu(
             self.game_name,
-            "Vote for your favourite.\n**{prompt}**:",
+            f"Vote for your favourite.\n**{prompt}**",
             interaction=self.CHOICE(choices),
         )
         result = sorted(
@@ -121,11 +157,16 @@ class EepLash(EGame):
                 self.game_name,
                 descr=f"**{context.author.name}** wants to start a new **{self.game_name}** game.\nRequires at least 3 players.",
             )
-            if len(players) < 2:
+            if len(players) < MIN_PLAYERS:
                 await context.send(
-                    "Too few players to start game. Requires at least 3."
+                    embed=self.embed(
+                        f"Too few players to start game. Requires at least {MIN_PLAYERS}."
+                    )
                 )
-
+            elif self._has_prompts() == False:
+                await context.send(
+                    embed=self.embed("No prompts found. Run the scrape command first.")
+                )
             else:
                 self.state["running"] = True
                 await self.execute_round()
@@ -137,6 +178,12 @@ class EepLash(EGame):
                 await context.send(embed=self.embed("Game stopped."))
             else:
                 await context.send(embed=self.embed("No game running."))
+
+        elif self.state["running"] == False and cmd == "scrape":
+            number_prompts = await self._scrape_prompts(context)
+            await context.send(embed=self.embed(f"Scraped {number_prompts} prompts."))
+        else:
+            await context.send(embed=self.embed("Unknown command."))
 
     async def cog_command_error(self, context, error):
         if isinstance(error, commands.errors.MissingRequiredArgument):

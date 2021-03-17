@@ -11,6 +11,14 @@ from utils import Clock
 
 CHECKMARK = "\U00002611"
 
+NUM_EMOJI = {
+    1: "\U00000031\U000020E3",
+    2: "\U00000032\U000020E3",
+    3: "\U00000033\U000020E3",
+    4: "\U00000034\U000020E3",
+    5: "\U00000035\U000020E3",
+}
+
 
 class EGame(commands.Cog):
     """E Game Cog
@@ -22,9 +30,11 @@ class EGame(commands.Cog):
     Provides a number of prefabricated interaction settings, such as
         POLL    - for vote based interaction
         REPLY   - for text based interaction
+        CHOICE  - for reaction vote on options (default: for up to 5 choices)
 
     Direct messaging:
-
+        DM_TEXT
+        DM_IMAGE
     """
 
     # prefabs
@@ -43,6 +53,17 @@ class EGame(commands.Cog):
     }
 
     REPLY = {"type": "reply", "usercomplete": True, "timeout": 15}
+
+    @staticmethod
+    def CHOICE(options: dict, enumerator=NUM_EMOJI):
+        emojis = [NUM_EMOJI[k] for k, v in options.items()]
+        return {
+            "type": "reaction",
+            "usercomplete": True,
+            "timeout": 15,
+            "choices": options,
+            "emojis": emojis,
+        }
 
     DM_TEXT = {"type": "dmtext", "timeout": 10}
     DM_IMAGE = {"type": "dmimage", "timeout": 10}
@@ -75,13 +96,22 @@ class EGame(commands.Cog):
                     i.reactions,
                 )
             )
-            # update remaining time counter
+
+            # get embed
             em = i.embeds[0]
+
+            # checks
+            count -= len(interaction["emojis"])
+            if interaction["usercomplete"] and count >= len(self.players):
+                em.set_footer(text="Everyone voted.")
+                await i.edit(embed=em)
+                return True
+
+            # update remaining time counter
             em.set_footer(text=f"\nTime Remaining: {rt}s")
             await i.edit(embed=em)
 
-            count -= len(interaction["emojis"])
-            # return count >= interaction["minvotes"]
+            return False
 
         timer = Clock(interaction["timeout"], callback)
         await timer.start()
@@ -94,7 +124,6 @@ class EGame(commands.Cog):
         result = {emoji: reactions[emoji] for emoji in interaction["emojis"]}
 
         # self.logging.info(result)
-        await self.channel.send(str(result))
         return result
 
     async def _add_reply_interaction(self, message, interaction):
@@ -130,8 +159,16 @@ class EGame(commands.Cog):
         self.logging.info(result)
         return result
 
+    async def _add_choices_to_message(self, message, choices):
+        em = message.embeds[0]
+        for k, v in choices.items():
+            em.add_field(name=str(k), value=v, inline=False)
+        await message.edit(embed=em)
+
     async def _add_interaction(self, message, interaction, **kwargs):
         if interaction["type"] == "reaction":
+            if interaction.get("choices", False):
+                await self._add_choices_to_message(message, interaction["choices"])
             return await self._add_reaction_interaction(message, interaction)
         elif interaction["type"] == "reply":
             return await self._add_reply_interaction(message, interaction)
@@ -188,9 +225,9 @@ class EGame(commands.Cog):
         else:
             return {}
 
-    async def _dm_all_players(self, content: dict, interaction=None):
+    async def dm_players(self, content: dict, players: dict, interaction=None):
         messages = {}
-        for pid, player in self.players.items():
+        for pid, player in players.items():
             i = await player.send(**content)
             messages[pid] = i
 
@@ -199,6 +236,9 @@ class EGame(commands.Cog):
             return replies
         else:
             return None
+
+    async def dm_all_players(self, content: dict, interaction=None):
+        return self._dm_players(content, self.players, interaction=interaction)
 
     async def menu(self, content: dict, interaction=None, channel=None):
         """Used to create menus in `self.channel` or `channel` kw if specified.

@@ -8,16 +8,7 @@ import random
 import re
 
 from utils import Clock
-
-CHECKMARK = "\U00002611"
-
-NUM_EMOJI = {
-    1: "\U00000031\U000020E3",
-    2: "\U00000032\U000020E3",
-    3: "\U00000033\U000020E3",
-    4: "\U00000034\U000020E3",
-    5: "\U00000035\U000020E3",
-}
+from utils.lookups import CHECKMARK, NUM_EMOJI, EMOJI_NUM
 
 
 class EGame(commands.Cog):
@@ -48,7 +39,7 @@ class EGame(commands.Cog):
             "\U0001F504",
         ],
         "usercomplete": True,  # wait until all users have voted
-        "timeout": 10,  # timeout,
+        "timeout": 15,  # timeout,
         "minvotes": 1,  # minimum votes needed before continuing
     }
 
@@ -65,8 +56,8 @@ class EGame(commands.Cog):
             "emojis": emojis,
         }
 
-    DM_TEXT = {"type": "dmtext", "timeout": 10}
-    DM_IMAGE = {"type": "dmimage", "timeout": 10}
+    DM_TEXT = {"type": "dmtext", "timeout": 30}
+    DM_IMAGE = {"type": "dmimage", "timeout": 45}
 
     def __init__(self, bot, logger_name):
         """
@@ -78,7 +69,7 @@ class EGame(commands.Cog):
 
         self.channel = None
         self.players = {}  # index by id
-        self.state = {}
+        self.state = {"running": False}
 
     async def _add_reaction_interaction(self, message, interaction):
         """Method for adding emoji-reaction to a message."""
@@ -120,7 +111,7 @@ class EGame(commands.Cog):
         message = await self.channel.fetch_message(message.id)
 
         # tally result
-        reactions = {i.emoji: i.count for i in message.reactions}
+        reactions = {i.emoji: i.count - 1 for i in message.reactions}
         result = {emoji: reactions[emoji] for emoji in interaction["emojis"]}
 
         # self.logging.info(result)
@@ -221,14 +212,26 @@ class EGame(commands.Cog):
 
         # unpack to dict
         if replies:
-            return {i[0]: i[1] for i in replies}
+            return {i[0]: i[1] for i in replies if i is not None}
         else:
             return {}
 
     async def dm_players(self, content: dict, players: dict, interaction=None):
+        """ DM the same content to each player """
+        unique_content = {
+            pid: content for pid in players.keys()
+        }  # kinda silly but it means same interface later
+        return await self.dm_players_unique(
+            unique_content, players, interaction=interaction
+        )
+
+    async def dm_players_unique(
+        self, unique_content: dict, players: dict, interaction=None
+    ):
+        """ DM unique content to each player, indexed by player id. """
         messages = {}
         for pid, player in players.items():
-            i = await player.send(**content)
+            i = await player.send(**unique_content[pid])
             messages[pid] = i
 
         if interaction:
@@ -238,7 +241,7 @@ class EGame(commands.Cog):
             return None
 
     async def dm_all_players(self, content: dict, interaction=None):
-        return self._dm_players(content, self.players, interaction=interaction)
+        return await self.dm_players(content, self.players, interaction=interaction)
 
     async def menu(self, content: dict, interaction=None, channel=None):
         """Used to create menus in `self.channel` or `channel` kw if specified.
@@ -265,11 +268,11 @@ class EGame(commands.Cog):
             interaction=interaction,
         )
 
-    async def newplayers(self, title):
+    async def newplayers(self, title, descr="No description."):
         replies = await self.menu(
             {
                 "title": title,
-                "description": "Reply to this message to join the game.",
+                "description": f"{descr}\n\nReply to this message to join the game.",
                 "colour": discord.Colour.blue(),
             },
             interaction=self.REPLY,
@@ -278,6 +281,3 @@ class EGame(commands.Cog):
         players = {k: v.author for (k, v) in replies.items()}
         self.players = players
         return players
-
-    async def dm_prompt(self, prompt):
-        ...

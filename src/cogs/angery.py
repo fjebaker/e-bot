@@ -5,13 +5,8 @@ from discord.ext import commands
 
 import re
 
-EMOJIS = [
-    "\U0001F621",
-    "\U0001F92C",
-    "\U0001F624",
-    "\U0001F47F",
-    "\U0001F329"
-]
+EMOJIS = ["\U0001F621", "\U0001F92C", "\U0001F624", "\U0001F47F", "\U0001F329"]
+
 
 class Angery(commands.Cog):
     def __init__(self, bot):
@@ -34,8 +29,6 @@ class Angery(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(
-        Angery(bot)
-    )
+    bot.add_cog(Angery(bot))
 
     return

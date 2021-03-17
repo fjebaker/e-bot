@@ -31,7 +31,7 @@ class PopeImage(commands.Cog):
             ...
         else:
             if self._has_pope(message.content):
-                i = random.randint(0, len(POPE_URIS)-1)
+                i = random.randint(0, len(POPE_URIS) - 1)
                 msg = f"#{i}\n{POPE_URIS[i]}"
                 await message.reply(msg)
 

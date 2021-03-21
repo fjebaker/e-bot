@@ -1,1 +1,2 @@
-from abstracts.egame import EGame, EMOJI_NUM, NUM_EMOJI
+from abstracts.egamefactory import EGameFactory
+from abstracts.guilddispatch import GuildDispatch

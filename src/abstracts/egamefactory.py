@@ -8,8 +8,10 @@ import random
 import os
 from collections import defaultdict
 
-from utils import Clock
+from utils import Clock, dmerge
 from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
+
+from interactive import *
 
 from econfig import PATH_EXTENSION
 
@@ -26,45 +28,7 @@ class EGameFactory:
 
     To be inherited by subclassing game cogs, providing basic interaction
     such as polling, player and context management, scores, etc..
-
-    Channel messaging:
-    Provides a number of prefabricated interaction settings, such as
-        POLL    - for vote based interaction
-        REPLY   - for text based interaction
-        CHOICE  - for reaction vote on options (default: for up to 5 choices)
-
-    Direct messaging:
-        DM_TEXT
-        DM_IMAGE
     """
-
-    # prefabs
-    POLL = {
-        "type": "reaction",
-        "emojis": [EMOJI_FORWARD["up-arrow"], EMOJI_FORWARD["down-arrow"]],
-        "usercomplete": True,  # wait until all users have voted
-        "timeout": 15,  # timeout, seconds
-        "minvotes": 1,  # minimum votes needed before continuing
-    }
-
-    REPLY = {"type": "reply", "usercomplete": True, "timeout": 5}
-
-    @staticmethod
-    def CHOICE(options: dict) -> dict:
-        """Method for generating choice interaction dictionaries. Options should be a
-        emoji key indexed dictionary mapping to the associated choice value.
-        """
-        emojis = [EMOJI_FORWARD[k] for k, v in options.items()]
-        return {
-            "type": "reaction",
-            "usercomplete": True,
-            "timeout": 15,
-            "choices": options,
-            "emojis": emojis,
-        }
-
-    DM_TEXT = {"type": "dmtext", "timeout": 30}
-    DM_IMAGE = {"type": "dmimage", "timeout": 45}
 
     def __init__(self, context, logger_name: str):
         """
@@ -111,7 +75,7 @@ class EGameFactory:
             **kwargs,
         )
 
-    def _add_score(self, value: int, pid: int):
+    def _add_score(self, pid: int, value: int):
         """TODO"""
         self.logging.info(f"Adding score {value} for player {pid}")
         self.state["scores"][pid] += value
@@ -141,252 +105,71 @@ class EGameFactory:
         self._players = players
         self._num_players = len(players.keys())
 
-    async def _add_reaction_interaction(self, message, interaction: dict):
-        """Internal method for adding emoji-reaction to a message."""
-        for emoji in interaction["emojis"]:
-            await message.add_reaction(emoji)
-
-        # exploit closure
-        async def callback(rt):
-            count = 0
-
-            i = await self.channel.fetch_message(message.id)
-            count = sum(
-                map(
-                    lambda x: x.count if x.emoji in interaction["emojis"] else 0,
-                    i.reactions,
-                )
-            )
-
-            # get embed
-            em = i.embeds[0]
-
-            # checks
-            count -= len(interaction["emojis"])
-            if interaction["usercomplete"] and count >= len(self.players):
-                em.set_footer(text="Everyone voted.")
-                await i.edit(embed=em)
-                return True
-
-            # update remaining time counter
-            em.set_footer(text=f"\nTime Remaining: {rt}s")
-            await i.edit(embed=em)
-
-            return False
-
-        timer = Clock(interaction["timeout"], callback)
-        await timer.start()
-
-        # final update
-        message = await self.channel.fetch_message(message.id)
-
-        # tally result
-        reactions = {i.emoji: i.count - 1 for i in message.reactions}
-        # decode emojis back into internal representation
-        result = {
-            EMOJI_BACKWARD[emoji]: reactions[emoji] for emoji in interaction["emojis"]
-        }
-
-        return result
-
-    async def _add_reply_interaction(self, message, interaction):
-        """Internal method"""
-        # get embed
-        em = message.embeds[0]
-        replies = list()
-
-        async def callback(rt):
-            em.set_footer(text=f"Reply to this message. \nTime Remaining: {rt}s")
-            await message.edit(embed=em)
-
-            # read in replies
-            async for i in message.channel.history(limit=100):
-                # if reading messages before bot message, break
-                if i.id == message.id:
-                    break
-
-                if (
-                    i.reference
-                    and i.reference.resolved.id == message.id
-                    and i not in replies
-                ):
-                    self.logging.info(f"Reply to {message.id}: {i.author}: {i.content}")
-                    replies.append(i)
-                    await i.add_reaction(EMOJI_FORWARD["checkmark"])
-
-        # do clock
-        timer = Clock(interaction["timeout"], callback)
-        await timer.start()
-
-        # unpack replies
-        result = {i.author.id: i for i in replies}
-        self.logging.info(result)
-        return result
-
-    async def _add_choices_to_message(self, message, choices):
-        """Internal method for adding numerical choices to a message embed."""
-        em = message.embeds[0]
-        for k, v in choices.items():
-            em.add_field(name=str(k), value=v, inline=False)
-        await message.edit(embed=em)
-
-    async def _add_interaction(self, message, interaction, **kwargs) -> dict:
-        """Internal method for adding interaction to messages."""
-        if interaction["type"] == "reaction":
-            if interaction.get("choices", False):
-                await self._add_choices_to_message(message, interaction["choices"])
-            return await self._add_reaction_interaction(message, interaction)
-        elif interaction["type"] == "reply":
-            return await self._add_reply_interaction(message, interaction)
-        else:
-            self.logging.error(f"Unknown interaction type {interaction['type']}")
-
-    def _dm_reply_factory(self, message, pid: int) -> FunctionType:
-        """Internal factory method for generating proper asynchronous closure capture.
-
-        :return: Direct message reading callback function.
-        """
-
-        # get embed
-        em = message.embeds[0]
-
-        async def _read_dm(rt):
-            # self.logging.info(f" - closure {pid}: {message.id}")
-            em.set_footer(
-                text=f"Message to this DM with your response. \nTime Remaining: {rt}"
-            )
-            await message.edit(embed=em)
-
-            async for i in message.channel.history(limit=5):
-                # don't read messages before bot message
-                if i.id == message.id:
-                    break
-
-                # do checks on messages here (type enforcement, length, etc)
-                self.logging.info(f"DM reply: {i.content}")
-
-                await i.add_reaction(EMOJI_FORWARD["checkmark"])
-
-                # wrap up and return
-                em.set_footer(text=f"Message to this DM with your response.")
-                await message.edit(embed=em)
-
-                return (pid, i)
-
-        return _read_dm
-
-    async def _get_dm_replies(self, messages: dict, interaction: dict) -> dict:
-        """Internal method
-
-        :return: Reply messages indexed by player id.
-        """
-
-        tasks = []
-        for pid, message in messages.items():
-            self.logging.info(f"Creating DM hook for {self.players[pid]}")
-
-            # abuse closure again
-            _read_dm = self._dm_reply_factory(message, pid)
-
-            timer = Clock(interaction["timeout"], _read_dm, default_return=(pid, None))
-            tasks.append(timer.start())
-
-        replies = await asyncio.gather(*tasks, return_exceptions=False)
-
-        self.logging.info(replies)
-
-        # unpack to dict
-        if replies:
-            return {i[0]: i[1] for i in replies}
-        else:
-            return {}
-
-    async def dm_players(
-        self, content: dict, player_ids: list, interaction=None
-    ) -> dict:
+    async def dm_players(self, content: dict, player_ids: list, ipipeline=None) -> dict:
         """Convenience method to send a message to a list of players.
 
         :param content: Embed content to send.
         :param player_ids: List of player ids to send message to.
         :param interaction: Interaction specification
-        :type interaction: `dict`, or `None`
+        :param ipipeline: Interaction pipeline
+        :type ipipeline: :class:`interactive.InteractionPipeline`, Optional
 
         :return: Reply dictionary if interaction present, else `None`."""
         unique_content = {pid: content for pid in player_ids}
-        return await self.dm_players_unique(unique_content, interaction=interaction)
+        return await self.dm_players_unique(unique_content, ipipeline=ipipeline)
 
-    async def dm_players_unique(self, unique_content: dict, interaction=None) -> dict:
+    async def dm_players_unique(self, unique_content: dict, ipipeline=None) -> dict:
         """DM unique content to each player, indexed by player id.
 
         :param unique_content: Embed content to send to player, indexed by the
         player id.
-        :param interaction: Interaction specification
-        :type interaction: `dict`, or `None`
+        :param ipipeline: Interaction pipeline
+        :type ipipeline: :class:`interactive.InteractionPipeline`, Optional
 
         :return: Reply dictionary if interaction present, else `None`.
         """
-        messages = {}
-        for pid, content in unique_content.items():
-            i = await self.players[pid].send(**content)
-            messages[pid] = i
 
-        if interaction:
-            replies = await self._get_dm_replies(messages, interaction)
-            return replies
+        tasks = []
+        for pid, embed in unique_content.items():
+
+            # get dm channel
+            dm_channel = self.players[pid].dm_channel
+            if not dm_channel:
+                # else create
+                dm_channel = await self.players[pid].create_dm()
+
+            if ipipeline:
+                self.logging.info(f"send_and_watch {dm_channel}")
+                t = ipipeline.send_and_watch(dm_channel, embed)
+
+            else:
+                self.logging.info(f"send {dm_channel}")
+                t = dm_channel.send(embed=embed)
+
+            tasks.append(t)
+
+        response_list = await asyncio.gather(*tasks)
+
+        responses = dmerge(*response_list)
+        self.logging.info(responses)
+
+        # unpack
+        if ipipeline:
+            return responses["response"]
         else:
-            return None
+            return {}
 
-    async def dm_all_players(self, content: dict, interaction=None) -> dict:
+    async def dm_all_players(self, content: dict, ipipeline=None) -> dict:
         """Convenience method to send a message to all players in the game.
 
         :param content: Embed content to send.
-        :param interaction: Interaction specification
-        :type interaction: `dict`, or `None`
+        :param ipipeline: Interaction pipeline
+        :type ipipeline: :class:`interactive.InteractionPipeline`, Optional
 
         :return: Reply dictionary if interaction present, else `None`.
         """
         self.logging.info(f"DMing all players in {self.guild}")
-        return await self.dm_players(
-            content, self.players.keys(), interaction=interaction
-        )
-
-    async def menu(self, content: dict, interaction=None, channel=None) -> dict:
-        """Used to create menus in `self.channel` or `channel` kw if specified.
-        Menus are embeds with optional emoji interactions.
-
-        :param content: Content to use in the Embed; unpacked as keywords for the
-        `discord.Embed` function
-        :param interaction: Interaction specification
-        :type interaction: `dict`, or `None`
-        :param channel: The channel to send the menu to. Defaults to the context channel.
-        :type channel: `discord.TextChannel`
-
-        :return: dictionary with the menu message instance, and optionally the interaction
-        result.
-        """
-        menu = discord.Embed(**content)
-
-        if channel:
-            message = await channel.send(embed=menu)
-        else:
-            message = await self.channel.send(embed=menu)
-
-        if interaction is not None:
-            respones = await self._add_interaction(message, interaction)
-            return dict(response=respones, message=message)
-
-        return dict(message=message)
-
-    async def titlemenu(self, text: str, interaction=None) -> dict:
-        """Convenience function for creating a title menu"""
-        return await self.menu(
-            {
-                "title": self.game_name,
-                "description": text,
-                "colour": discord.Colour.blue(),
-            },
-            interaction=interaction,
-        )
+        return await self.dm_players(content, self.players.keys(), ipipeline=ipipeline)
 
     async def _players_prompt(self) -> dict:
         """Creates a discord embed menu, which players are told to reply to if they
@@ -397,16 +180,15 @@ class EGameFactory:
 
         :return: Authors indexed by id.
         """
-        replies = await self.menu(
-            {
-                "title": self.game_name,
-                "description": f"{self.game_description}\n\nReply to this message to join the game.",
-                "colour": discord.Colour.blue(),
-            },
-            interaction=self.REPLY,
+        embed = self.embed(
+            f"{self.game_description}\n\nReply to this message to join the game."
         )
 
-        return {k: v.author for (k, v) in replies["response"].items()}
+        # create reply reaction pipeline
+        ipl = InteractionPipeline(ReplyInteraction())
+
+        response = await ipl.send_and_watch(self.channel, embed, timeout=11)
+        return {k: v.author for (k, v) in response["response"]["reply"].items()}
 
     async def announce_ranking(self, result: list):
         """Presents the ranking of scores in `results` in a discord embed in the
@@ -415,7 +197,7 @@ class EGameFactory:
         :param result: List of  `(num votes: int, pid: int)` tuples.
         """
         scoreboard = "Scores for this round:\n" + "\n".join(
-            [f"{votes} votes for {self.players[pid]}" for votes, pid in result]
+            [f"{i[0]} votes for {self.players[i[1]]}" for i in result]
         )
 
         await self.channel.send(embed=self.embed(scoreboard))
@@ -433,9 +215,13 @@ class EGameFactory:
         scoreboard = [
             f"{i+1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)
         ]
-        await self.channel.send(
-            embed=self.embed("**Global Scores:**\n" + "\n".join(scoreboard))
+
+        em = self.embed("**Global Scores:**\n" + "\n".join(scoreboard))
+        em.set_thumbnail(
+            url="http://www.bbc.co.uk/gloucestershire/content/images/2005/10/14/louis_theroux_150x180.jpg"
         )
+
+        await self.channel.send(embed=em)
 
     # override
     async def stop(self):
@@ -477,6 +263,7 @@ class EGameFactory:
         :return: Number of players registered.
         """
         self.logging.info("Calling gather players.")
+
         self.players = await self._players_prompt()
 
         self.logging.info(f"number of players {self._num_players}")

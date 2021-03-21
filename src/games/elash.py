@@ -39,8 +39,8 @@ class ELash(EGameFactory):
 
     game_name = "E Lash"
     game_description = ""
-    wait_duration = 2
-    min_players = 1
+    wait_duration = 5
+    min_players = 2
     cog_help = "TODO"
     has_scrape = True
 
@@ -227,7 +227,7 @@ class ELash(EGameFactory):
         outgoing = []
         for (v, pid, i) in result:
             if pid in used_safety:
-                outgoing.append((1, pid, i))
+                outgoing.append((1 if v >= 1 else 0, pid, i))
             else:
                 outgoing.append((v, pid, i))
 

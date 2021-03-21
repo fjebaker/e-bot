@@ -189,7 +189,7 @@ class ELash(EGameFactory):
             response = await self.vote_on(prompts[index], solutions)
 
             # announce ranking
-            await self.announce_ranking(result)
+            await self.announce_ranking(response["result"])
 
             if used_safety:
                 # adjust for safeties

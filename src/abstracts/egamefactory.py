@@ -211,6 +211,7 @@ class EGameFactory:
         scores = sorted(
             [(pid, tallied_scores[pid]) for pid in self.players.keys()],
             key=lambda i: i[1],
+            reverse=True
         )
         scoreboard = [
             f"{i+1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)

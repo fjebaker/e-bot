@@ -12,7 +12,7 @@ class ButtonInteraction(Monitor):
     def __init__(self, *emoji_indexes, helpstring="", callback=None):
         self.logging = logging.getLogger(__name__ + ":" + self.__class__.__name__)
         self.emojis = [EMOJI_FORWARD[i] for i in emoji_indexes]
-        self.callback = callable
+        self.callback = callback
 
         self.helpstring = (
             helpstring if helpstring else "Click a reaction to make a choice."

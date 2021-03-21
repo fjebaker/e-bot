@@ -1,5 +1,6 @@
 import asyncio
 
+
 class Clock:
     """Mini Blocking Clock class for some sense of timing in the game. Calls
     `condition` at every `rate` seconds, with remaining time in `int` as
@@ -22,7 +23,7 @@ class Clock:
     :type condition: function, optional
     :param rate: How often to call `condition` (seconds, default=1).
     :param default_return: What the clock should return as the default value
-    on expiry (default None)
+    on expiry (default {})
     :type default_return: function, optional
     """
 
@@ -31,14 +32,14 @@ class Clock:
         self.condition = condition
         self.integrator = 0
         self.rate = rate
-        self.default = default
+        self.default_return = {} if default_return is None else default_return
 
     async def start(self):
         """Start the clock integration. Calls `self.condition` every `self.rate` seconds.
         If `self.condition` returns non-falsey result, will exit and return the result. Else
-        keeps integrating, and returns `self.default` one clock is expired.
+        keeps integrating, and returns `self.default_return` one clock is expired.
 
-        :return: Result of `self.condition`, or `self.default`.
+        :return: Result of `self.condition`, or `self.default_return`.
         """
         while self.integrator < self.duration:
             self.integrator += 1
@@ -49,4 +50,4 @@ class Clock:
                 if result:
                     return result
 
-        return self.default
+        return self.default_return

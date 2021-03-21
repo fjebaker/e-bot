@@ -10,6 +10,8 @@ import collections
 import os
 
 from utils.lookups import EMOJI_FORWARD
+from utils import dmerge
+from interactive import *
 
 from econfig import PATH_EXTENSION
 
@@ -138,71 +140,120 @@ class ELash(EGameFactory):
         # give each player an ordering of prompts
         pidmap = {pid: ordering[i] for i, pid in enumerate(pids)}
 
+        # build interaction pipeline
+        ipl = InteractionPipeline(
+            MessageInteraction(),
+            ButtonInteraction(
+                "temperature",
+                helpstring=f"Press {EMOJI_FORWARD['temperature']} for a Safety Answer (maximum 1 point).",
+            ),
+        )
+
+        # dm prompts to players (requires two rounds so even number of answers)
         # create a data structure to hold the results
         answers = collections.defaultdict(dict)
         # will map prompt_id -> {pid -> answer}
-
-        # dm prompts to players (requires two rounds so even number of answers)
         for game_round in range(2):
             # generate unique content to send to players
             unique_content = {
-                pid: {"embed": self.embed(prompts[order[game_round]])}
+                pid: self.embed(prompts[order[game_round]])
                 for pid, order in pidmap.items()
             }
 
             # get replies
-            dm_replies = await self.dm_players_unique(
-                unique_content, interaction=self.DM_TEXT
-            )
+            dm_response = await self.dm_players_unique(unique_content, ipipeline=ipl)
+            replies = dm_response.get("message", [])
 
             # unpack
-            for pid, message in dm_replies.items():
-                # determine which prompt was given to the player
-                prompt_num = pidmap[pid][game_round]
+            used_safety = []
+            for pid in pids:
 
-                # store their answer indexed by the player id
-                if message:
-                    answers[prompt_num][pid] = message.content
+                if pid in replies:
+                    message = replies[pid].content
                 else:
-                    # no message given
-                    answers[prompt_num][pid] = "Safety placeholder."
+                    # doesn't matter if people picked safety or timeout
+                    message = random.choice(self.safeties)
+                    used_safety.append(pid)
+                    await self.players[pid].send(
+                        embed=self.embed(f"Your safety is:\n**{message}**")
+                    )
+                    message = f"{message} *(Safety)*"
 
-        # continuity check ?? or auto win if missing answer
+                p_num = pidmap[pid][game_round]
+                answers[p_num][pid] = message
 
         self.logging.info(answers)
+
         # present / vote on answers
         for index, solutions in answers.items():
-            result = await self.vote_on(prompts[index], solutions)
+            response = await self.vote_on(prompts[index], solutions)
 
-            # tally scores
-            [self._add_score(*i) for i in result]
+            if used_safety:
+                # adjust for safeties
+                result = self._adjust_safety(response["result"], used_safety)
+            else:
+                result = response["result"]
 
-            # announce winner
+            # announce ranking
             await self.announce_ranking(result)
 
-            # tally total scores
+            # edit vote board
+            await self._modify_vote_board(response["message"], result)
+
+            # tally scores
+            [self._add_score(i[1], i[0]) for i in result]
 
         # print scoreboard
         await self.scoreboard()
 
-    async def vote_on(self, prompt, solutions: dict):
-        sols = [(k, v) for k, v in solutions.items()]
-        # + 1 so doesn't index at 0
-        choices = {i + 1: s[1] for i, s in enumerate(sols)}
+    async def _modify_vote_board(self, message, result):
+        """TODO"""
+        self.logging.info("Modifying score board")
+        embed = message.embeds[0]
 
-        result = await self.titlemenu(
-            f"Vote for your favourite.\n**{prompt}**",
-            interaction=self.CHOICE(choices),
+        for (_, pid, i) in result:
+            field = embed.fields[i]
+            embed.set_field_at(
+                i,
+                name=field.name,
+                value=f"{field.value} :: *{self.players[pid]}*",
+                inline=False,
+            )
+
+        await message.edit(embed=embed)
+
+    def _adjust_safety(self, result: list, used_safety: list) -> list:
+        """TODO"""
+        outgoing = []
+        for (v, pid, i) in result:
+            if pid in used_safety:
+                outgoing.append((1, pid, i))
+            else:
+                outgoing.append((v, pid, i))
+
+        return outgoing
+
+    async def vote_on(self, prompt: str, solutions: dict) -> dict:
+        """TODO """
+        pids = [k for k in solutions.keys()]
+        answers = [solutions[k] for k in pids]
+
+        ipl = InteractionPipeline(ChoiceInteraction(*answers))
+        response = await ipl.send_and_watch(
+            self.channel, self.embed(f"Vote for your favourite:\n**{prompt}**\n")
         )
 
-        result = sorted(
-            # subtract one to undo shift
-            [(vote, sols[int(i) - 1][0]) for i, vote in result["response"].items()],
+        response["result"] = sorted(
+            # tuple of (votes, pid, index of answer in table)
+            (
+                (v, pids[int(i) - 1], int(i) - 1)
+                for i, v in response["response"]["choice"].items()
+            ),
             key=lambda i: i[0],
             reverse=True,
         )
-        # return (votes, pid_winner), (votes, pid_loser)
-        return result
+
+        return response
 
     async def scrape(self, context) -> str:
         """TODO"""

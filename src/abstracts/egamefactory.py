@@ -140,7 +140,7 @@ class EGameFactory:
 
             if ipipeline:
                 self.logging.info(f"send_and_watch {dm_channel}")
-                t = ipipeline.send_and_watch(dm_channel, embed)
+                t = ipipeline.send_and_watch(dm_channel, embed, timeout=31)
 
             else:
                 self.logging.info(f"send {dm_channel}")

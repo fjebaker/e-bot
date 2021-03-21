@@ -18,7 +18,7 @@ class InteractionPipeline:
 
         self.logging.info(f"instanced with {str(actions)}")
 
-    async def send_and_watch(self, channel, embed: discord.Embed, timeout=6) -> dict:
+    async def send_and_watch(self, channel, embed: discord.Embed, timeout=16) -> dict:
         # apply formats to embed and reset pipeline state
         for p in self.pipeline:
             p.reset()

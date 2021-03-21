@@ -99,15 +99,11 @@ class InteractionPipeline:
 
         result = await clock.start()
 
-        self.logging.info(f"Finished monitoring.")
-
         # update message reference
         message = await message.channel.fetch_message(message.id)
 
         for p in self.pipeline:
             p_result = await p.finalize(message)
-
-            self.logging.info(f"{p.name} finalized with {p_result}")
 
             if p_result:
 

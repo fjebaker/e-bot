@@ -18,7 +18,7 @@ class InteractionPipeline:
 
         self.logging.info(f"instanced with {str(actions)}")
 
-    async def send_and_watch(self, channel, embed, timeout=6):
+    async def send_and_watch(self, channel, embed: discord.Embed, timeout=6) -> dict:
         # apply formats to embed and reset pipeline state
         for p in self.pipeline:
             p.reset()
@@ -32,9 +32,9 @@ class InteractionPipeline:
             await p.post_format(message)
 
         # watch the message
-        result = await self._watch(message, timeout)
+        message, result = await self._watch(message, timeout)
 
-        return {"message": message, "result": result}
+        return {"message": message, "response": result}
 
     def _closure_capture(self, message):
         em = message.embeds[-1]
@@ -44,8 +44,6 @@ class InteractionPipeline:
             footer_text = em.footer.text
         else:
             footer_text = ""
-
-        self.logging.info(footer_text)
 
         streaming = [i for i in self.pipeline if i.is_stream]
         observing = [i for i in self.pipeline if not i.is_stream]
@@ -93,7 +91,7 @@ class InteractionPipeline:
 
         return callback
 
-    async def _watch(self, message, timeout: int) -> dict:
+    async def _watch(self, message, timeout: int) -> tuple:
 
         clock = Clock(timeout, self._closure_capture(message))
 
@@ -115,4 +113,4 @@ class InteractionPipeline:
 
                 result[p.name] = p_result
 
-        return result
+        return message, result

@@ -9,13 +9,20 @@ from interactive.monitor import Monitor
 class ButtonInteraction(Monitor):
     name = "button"
 
-    def __init__(self, *emoji_indexes):
+    def __init__(self, *emoji_indexes, helpstring="", callback=None):
         self.logging = logging.getLogger(__name__ + ":" + self.__class__.__name__)
         self.emojis = [EMOJI_FORWARD[i] for i in emoji_indexes]
+        self.callback = callable
+
+        self.helpstring = (
+            helpstring if helpstring else "Click a reaction to make a choice."
+        )
 
     def format(self, embed):
         footer_text = self.get_footer_text(embed)
-        embed.set_footer(text=f"Click a reaction to make a choice.\n{footer_text}")
+
+        footer_text = f"{self.helpstring}\n{footer_text}"
+        embed.set_footer(text=footer_text)
         return embed
 
     async def post_format(self, message):
@@ -25,10 +32,21 @@ class ButtonInteraction(Monitor):
     async def monitor(self, message) -> dict:
         selections = filter(
             lambda x: x[1] > 1,
-            ((i, i.count) for i in message.reactions if i.emoji in self.emojis),
+            (
+                (EMOJI_BACKWARD[i.emoji], i.count)
+                for i in message.reactions
+                if i.emoji in self.emojis
+            ),
         )
         if selections:
+
+            # hot branch
+            if self.callback:
+                self.callback(message)
+
             # subtract 1 for bot
             return {i[0]: i[1] - 1 for i in selections}
+
         else:
+            # cold branch
             return {}

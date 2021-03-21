@@ -187,7 +187,7 @@ class EGameFactory:
         # create reply reaction pipeline
         ipl = InteractionPipeline(ReplyInteraction())
 
-        response = await ipl.send_and_watch(self.channel, embed, timeout=11)
+        response = await ipl.send_and_watch(self.channel, embed, timeout=16)
         return {k: v.author for (k, v) in response["response"]["reply"].items()}
 
     async def announce_ranking(self, result: list):

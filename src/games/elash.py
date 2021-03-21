@@ -188,14 +188,14 @@ class ELash(EGameFactory):
         for index, solutions in answers.items():
             response = await self.vote_on(prompts[index], solutions)
 
+            # announce ranking
+            await self.announce_ranking(result)
+
             if used_safety:
                 # adjust for safeties
                 result = self._adjust_safety(response["result"], used_safety)
             else:
                 result = response["result"]
-
-            # announce ranking
-            await self.announce_ranking(result)
 
             # edit vote board
             await self._modify_vote_board(response["message"], result)

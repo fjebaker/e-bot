@@ -33,11 +33,6 @@ class ChoiceInteraction(Monitor):
                 )
             )
             if count >= self.max_votes:
-                # update footer text
-                em = message.embeds[0]
-                em.set_footer(text="Everybody voted.")
-                await message.edit(embed=em)
-
                 return {self.name: count}
 
         return {}

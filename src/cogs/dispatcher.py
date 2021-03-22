@@ -1,5 +1,6 @@
 from abstracts import GuildDispatch
 from games.elash import ELash
+from games.ecards import ECards
 
 import discord
 from discord.ext import commands
@@ -21,6 +22,10 @@ class EGameDispatch(GuildDispatch):
     @commands.command(name="elash")
     async def entry(self, context, cmd: str):
         await self._entry(context, cmd, ELash)
+
+    @commands.command(name="ecards")
+    async def cards(self, context, cmd: str):
+        await self._entry(context, cmd, ECards)
 
     @commands.command(name="test")
     async def test(self, context):

@@ -85,36 +85,6 @@ class ELash(EGameFactory):
         # do a round
         return await self.execute_round()
 
-    def _has_prompts(self):
-        if os.path.isfile(FILE):
-            with open(FILE, "r") as f:
-                self.prompt_list = [i for i in f.read().split("\n") if i != ""]
-            return len(self.prompt_list) > 0
-        else:
-            self.logging.error(f"No prompt file {FILE}.")
-            return False
-
-    async def _scrape_prompts(self, context):
-        channel = next(
-            filter(lambda c: c.name == SCRAPE_CHANNEL, context.guild.channels)
-        )
-
-        prompts = []
-        async for message in channel.history(limit=1000):
-            try:
-                prompts.append(
-                    message.content.replace("{blank}", "_" * 5).replace(
-                        "{the current year}", "the current year"
-                    )
-                )
-            except Exception as e:
-                self.logging.error(f"Prompt scrape error: {e}")
-
-        with open(FILE, "w") as f:
-            f.write("\n".join(prompts))
-
-        return len(prompts)
-
     async def execute_round(self):
         """Executes exactly one round of the game.
 

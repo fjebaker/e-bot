@@ -229,12 +229,9 @@ class ECards(EGameFactory):
             tasks.append(t)
 
         response_list = await asyncio.gather(*tasks)
+        response_list = [item if item else {} for item in response_list]
 
         responses = dmerge(*response_list)
         self.logging.info(responses)
 
-        # unpack
-        if ipipeline:
-            return responses["response"]
-        else:
-            return {}
+        return responses["response"]

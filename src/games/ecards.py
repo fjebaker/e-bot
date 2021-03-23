@@ -168,15 +168,17 @@ class ECards(EGameFactory):
             # make sure result is present
             if "choice" in resp.get("response", {}):
                 # handle response
-                choices = list(filter(lambda i: i[1] == 1, resp["choice"].items()))
-                
+                choices = list(filter(lambda i: i[1] == 1, resp["response"]["choice"].items()))
+
                 if choices:
-                    cards_played[pid] = hands[pid].pop(choices[0])    
-                
+                    cards_played[pid] = hands[pid].pop(choices[0])
+
                 else:
                     # no card: log for now
-                    self.logging.info(f"Player {self.players[pid]} did not play a card.")
-            
+                    self.logging.info(
+                        f"Player {self.players[pid]} did not play a card."
+                    )
+
             elif pid != leader:
                 # log warning
                 self.logging.warning(f"Bad response from {self.players[pid]}: {resp}")

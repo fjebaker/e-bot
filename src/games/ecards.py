@@ -259,7 +259,7 @@ class ECards(EGameFactory):
             else:
                 #update scoreboard
                 self._add_score(leader, -1)
-                return await self.channel.send(embed=self.embed(f"No winner chosen. Punishing {self.players[winning_pid]} with -1 point for their insolence!"))
+                return await self.channel.send(embed=self.embed(f"No winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"))
                 
 
     async def scrape(self, context) -> str:

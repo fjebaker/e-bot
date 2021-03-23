@@ -96,15 +96,6 @@ class ECards(EGameFactory):
             while len(hands[key]) < 5:
                 hands[key].append(answer_deck.pop())
 
-    @staticmethod
-    def construct_message(prompt: str, cards: list) -> str:
-        """
-        Convenience method to construct the message to send to a non-leader player.
-        Tells them the current prompt and their hand.
-        """
-        end = "\n".join([f"{index+1}: {value}" for index, value in enumerate(cards)])
-        return f"This round's prompt: {prompt}\n{end}"
-
     async def execute_round(self, leader: str, prompt: str, hands: dict):
         """Executes exactly one round of the game.
 
@@ -134,7 +125,7 @@ class ECards(EGameFactory):
                 f"This round's prompt: {prompt}\nYou're the leader for this round - sit back and relax!"
             )
             if pid == leader
-            else self.embed(ECards.construct_message(prompt, hands[pid]))
+            else self.embed(f"This round's prompt: {prompt}")
             for pid in pids
         }
 
@@ -189,53 +180,86 @@ class ECards(EGameFactory):
                 # log warning
                 self.logging.warning(f"Bad response from {self.players[pid]}: {resp}")
 
-        # TODO: Default logic for if 0 or 1 cards played
-
         # shuffle responses to list
         shuffled_responses = list(cards_played.values())
         random.shuffle(shuffled_responses)
 
-        # construct message for channel
-        end_str = "\n".join(shuffled_responses)
-        await self.channel.send(
-            embed=self.embed(
-                f"This round's answers:\n{end_str}\nAwaiting choice of a winner from {self.players[leader]}"
-            )
-        )
+        asyncio.sleep(self.wait_duration)
 
-        # dm the leader to choose
-        leader_ipl = InteractionPipeline(
-            ChoiceInteraction(*shuffled_responses, max_votes=1)
-        )
-        choice_response = await leader_ipl.send_and_watch(await self.players[leader].create_dm(), self.embed("Please vote for the winning prompt."))
-
-        # find winning card
-        winning_card = ""
-        if choice_response:
-            # invert 
-            inverted = {v: k for k, v in choice_response["response"]["choice"].items()}
-            index = inverted.get(1, 0)
-            if index:
-                winning_card = shuffled_responses[index-1]
-
-        win_generator = filter(lambda i: i[1] == winning_card, cards_played.items())
-        if win_generator:
-            # get key
-            winning_pid = next(win_generator)[0]
-
-            # message channel with round result
+        if len(shuffled_responses) == 0:
+            # No-one played a card - skip the round
             await self.channel.send(
                 embed=self.embed(
-                    f"The winning answer:\n{winning_card} (answer from {self.players[winning_pid]})"
+                    "No-one played a card. Are the players even there? Skipping this round..."
                 )
             )
-        else:
+        elif len(shuffled_responses) == 1:
+            # Only one person played a card - award them the victory
+            winning_card = shuffled_responses[0]
+            win_generator = filter(lambda i: i[1] == winning_card, cards_played.items())
+            if win_generator:
+                # get key
+                winning_pid = next(win_generator)[0]
 
-            # TODO: Logic for if no card is chosen
-            return await self.channel.send(embed=self.embed("No winner chosen."))
-            
-        # update scoreboard
-        self._add_score(winning_pid, 1)
+                # message channel with round result
+                await self.channel.send(
+                    embed=self.embed(
+                        f"Only {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default. Is everyone else even there?"
+                    )
+                )
+
+                # update scoreboard
+                self._add_score(winning_pid, 1)
+        else:
+            # Enough responses for a proper vote
+            end_str = "\n".join(shuffled_responses)
+            await self.channel.send(
+                embed=self.embed(
+                    f"This round's answers:\n{end_str}\nAwaiting choice of a winner from {self.players[leader]}"
+                )
+            )
+
+            # little pause
+            asyncio.sleep(self.wait_duration)
+
+            # dm the leader to choose
+            leader_ipl = InteractionPipeline(
+                ChoiceInteraction(*shuffled_responses, max_votes=1)
+            )
+            choice_response = await leader_ipl.send_and_watch(await self.players[leader].create_dm(), self.embed("Please vote for the winning prompt."))
+
+            # find winning card
+            winning_card = ""
+            if choice_response:
+                # invert 
+                inverted = {v: k for k, v in choice_response["response"]["choice"].items()}
+                index = inverted.get(1, 0)
+                if index:
+                    winning_card = shuffled_responses[index-1]
+
+            win_generator = filter(lambda i: i[1] == winning_card, cards_played.items())
+            if win_generator:
+                # get key
+                winning_pid = next(win_generator)[0]
+
+                # little pause
+                asyncio.sleep(self.wait_duration)
+
+                # message channel with round result
+                await self.channel.send(
+                    embed=self.embed(
+                        f"The winning answer:\n{winning_card} (answer from {self.players[winning_pid]})"
+                    )
+                )
+
+                # update scoreboard
+                self._add_score(winning_pid, 1)
+
+            else:
+                #update scoreboard
+                self._add_score(leader, -1)
+                return await self.channel.send(embed=self.embed(f"No winner chosen. Punishing {self.players[winning_pid]} with -1 point for their insolence!"))
+                
 
     async def scrape(self, context) -> str:
         """TODO"""

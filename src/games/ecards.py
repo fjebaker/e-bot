@@ -125,6 +125,9 @@ class ECards(EGameFactory):
             )
         )
 
+        # immutable pids
+        pids = list(self.players.keys())
+
         # construct content
         content_dict = {
             pid: self.embed(
@@ -132,34 +135,51 @@ class ECards(EGameFactory):
             )
             if pid == leader
             else self.embed(ECards.construct_message(prompt, hands[pid]))
-            for pid in hands
-        }
-
-        # construct pipelines
-        pipeline_dict = {
-            pid: False
-            if pid == leader
-            else InteractionPipeline(ChoiceInteraction(*hands[pid], max_votes=1))
-            for pid in hands
+            for pid in pids
         }
 
         # get all message responses
-        dm_response = await self._dm_players_unique_pipelines(
-            content_dict, pipeline_dict
-        )
-        replies = dm_response.get("message", [])
+        tasks = []
+        for pid in pids:
+            # get channel
+            dm_channel = await self.players[pid].create_dm()
 
-        # card played for each pid
+            if pid != leader:
+                # make pipeline
+                ipl = InteractionPipeline(ChoiceInteraction(*hands[pid], max_votes=1))
+
+                # send message by storing coroutine
+                tasks.append(ipl.send_and_watch(dm_channel, content_dict[pid]))
+            else:
+                # leader
+                tasks.append(dm_channel.send(embed=content_dict[pid]))
+
+        # await routines
+        dm_response = {
+            # ensure type consistent output
+            pid: resp if pid != leader else {}
+            for pid, resp in zip(pids, await asyncio.gather(*tasks))
+        }
+
+        # unpack which card played
         cards_played = {}
-        for pid in hands:
-            if pid != leader and pid in replies:
-                choices = [
-                    index
-                    for index, item in enumerate(replies[pid]["choice"])
-                    if item == 1
-                ]
-                if len(choices) > 0:
-                    cards_played[pid] = hands[pid].pop(choices[0])
+        for pid, resp in dm_response.items():
+
+            # make sure result is present
+            if "choice" in resp.get("response", {}):
+                # handle response
+                choices = list(filter(lambda i: i[1] == 1, resp["choice"].items()))
+                
+                if choices:
+                    cards_played[pid] = hands[pid].pop(choices[0])    
+                
+                else:
+                    # no card: log for now
+                    self.logging.info(f"Player {self.players[pid]} did not play a card.")
+            
+            elif pid != leader:
+                # log warning
+                self.logging.warning(f"Bad response from {self.players[pid]}: {resp}")
 
         # TODO: Default logic for if 0 or 1 cards played
 
@@ -224,43 +244,3 @@ class ECards(EGameFactory):
         )
 
         return f"Scraped {num_prompts} prompts, and {num_safeties} safeties."
-
-    async def _dm_players_unique_pipelines(
-        self, unique_content: dict, ipipelines: dict
-    ) -> dict:
-        """DM unique content to each player, indexed by player id.
-
-        :param unique_content: Embed content to send to player, indexed by the
-        player id.
-        :param ipipelines: Interaction pipeline to send to player, indexed by the
-        player id.
-
-        :return: Reply dictionary if interaction present, else `None`.
-        """
-
-        tasks = []
-        for pid, embed in unique_content.items():
-
-            # get dm channel
-            dm_channel = self.players[pid].dm_channel
-            if not dm_channel:
-                # else create
-                dm_channel = await self.players[pid].create_dm()
-
-            if ipipelines[pid]:
-                self.logging.info(f"send_and_watch {dm_channel}")
-                t = ipipelines[pid].send_and_watch(dm_channel, embed, timeout=31)
-
-            else:
-                self.logging.info(f"send {dm_channel}")
-                t = dm_channel.send(embed=embed)
-
-            tasks.append(t)
-
-        response_list = await asyncio.gather(*tasks)
-        response_list = [item if item else {} for item in response_list]
-
-        responses = dmerge(*response_list)
-        self.logging.info(responses)
-
-        return responses["response"]

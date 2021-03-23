@@ -18,8 +18,8 @@ class ECards(EGameFactory):
     # Configuration for the game
     game_name = "E Cards"
     game_description = "Prompt cards with your friends!"
-    wait_duration = 5
-    min_players = 3
+    wait_duration = 6
+    min_players = 2
     cog_help = """
     EGameFactory for a game where one player is given a prompt,
     the other players select an answer from a set of safety answers,
@@ -72,7 +72,7 @@ class ECards(EGameFactory):
         answer_deck = random.sample(self.safeties, len(self.safeties))
 
         # create starting hands
-        hands = {pid: [answer_deck.pop() for _ in range(9)] for pid in self.players}
+        hands = {pid: [answer_deck.pop() for _ in range(5)] for pid in self.players}
 
         # run a round for each player
         for pid in self.players:
@@ -93,7 +93,7 @@ class ECards(EGameFactory):
         :param answer_deck: a deck of answer cards to fill hands with
         """
         for key in hands:
-            while len(hands[key]) < 9:
+            while len(hands[key]) < 5:
                 hands[key].append(answer_deck.pop())
 
     @staticmethod

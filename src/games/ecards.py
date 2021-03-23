@@ -102,7 +102,7 @@ class ECards(EGameFactory):
         Convenience method to construct the message to send to a non-leader player.
         Tells them the current prompt and their hand.
         """
-        end = "\n".join([f"{index+1}: {value}" for index, value in enumerate(list)])
+        end = "\n".join([f"{index+1}: {value}" for index, value in enumerate(cards)])
         return "This round's prompt: {prompt}\n{end}"
 
     async def execute_round(self, leader: str, prompt: str, hands: dict):

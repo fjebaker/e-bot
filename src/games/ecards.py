@@ -103,7 +103,7 @@ class ECards(EGameFactory):
         Tells them the current prompt and their hand.
         """
         end = "\n".join([f"{index+1}: {value}" for index, value in enumerate(cards)])
-        return "This round's prompt: {prompt}\n{end}"
+        return f"This round's prompt: {prompt}\n{end}"
 
     async def execute_round(self, leader: str, prompt: str, hands: dict):
         """Executes exactly one round of the game.
@@ -162,7 +162,8 @@ class ECards(EGameFactory):
         }
 
         # unpack which card played
-        cards_played = {}
+        # pid -> str
+        cards_played = {} 
         for pid, resp in dm_response.items():
 
             # make sure result is present
@@ -203,40 +204,36 @@ class ECards(EGameFactory):
         )
 
         # dm the leader to choose
-        leader_pipeline = InteractionPipeline(
-            ChoiceInteraction(shuffled_responses, max_votes=1)
+        leader_ipl = InteractionPipeline(
+            ChoiceInteraction(*shuffled_responses, max_votes=1)
         )
-        choice_response = await self.dm_players(
-            "Please vote for the winning prompt.", [leader], leader_pipeline
-        )
-        choice_replies = choice_response.get("message", [])
+        choice_response = await leader_ipl.send_and_watch(await self.players[leader].create_dm(), self.embed("Please vote for the winning prompt."))
 
         # find winning card
         winning_card = ""
-        if leader in choice_replies:
-            choices = [
-                index
-                for index, item in enumerate(choice_replies[leader]["choice"])
-                if item == 1
-            ]
-            if len(choices) > 0:
-                winning_card = shuffled_responses[choices[0]]
+        if choice_response:
+            # invert 
+            inverted = {v: k for k, v in choice_response["response"]["choice"].items()}
+            index = inverted.get(1, 0)
+            if index:
+                winning_card = shuffled_responses[index-1]
 
-        # find winning user from card
-        winning_pid = ""
-        winning_pid_list = [item for item in cards_played if item[1] == winning_card]
-        if len(winning_pid_list) > 0:
-            winning_pid = winning_pid_list[0]
+        win_generator = filter(lambda i: i[1] == winning_card, cards_played.items())
+        if win_generator:
+            # get key
+            winning_pid = next(win_generator)[0]
 
-        # TODO: Logic for if no card is chosen
-
-        # message channel with round result
-        await self.channel.send(
-            embed=self.embed(
-                f"The winning answer:\n{winning_card} (answer from {self.players[winning_pid]})"
+            # message channel with round result
+            await self.channel.send(
+                embed=self.embed(
+                    f"The winning answer:\n{winning_card} (answer from {self.players[winning_pid]})"
+                )
             )
-        )
+        else:
 
+            # TODO: Logic for if no card is chosen
+            return await self.channel.send(embed=self.embed("No winner chosen."))
+            
         # update scoreboard
         self._add_score(winning_pid, 1)
 

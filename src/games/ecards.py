@@ -7,6 +7,7 @@ from interactive import *
 
 from utils import dmerge
 
+
 class ECards(EGameFactory):
     """
     EGameFactory for a game where one player is given a prompt,
@@ -32,9 +33,9 @@ class ECards(EGameFactory):
     def __init__(self, context):
         super().__init__(context, __name__)
 
-        #instance property of all prompts
+        # instance property of all prompts
         self.prompts = None
-        #instance property of all safety "cards"
+        # instance property of all safety "cards"
         self.safeties = None
 
     async def start(self):
@@ -67,15 +68,17 @@ class ECards(EGameFactory):
             )
 
         # create deck orders
-        prompt_deck = random.sample(self.prompts,len(self.prompts))
-        answer_deck = random.sample(self.safeties,len(self.safeties))
+        prompt_deck = random.sample(self.prompts, len(self.prompts))
+        answer_deck = random.sample(self.safeties, len(self.safeties))
 
         # create starting hands
         hands = {pid: [answer_deck.pop() for _ in range(9)] for pid in self.players}
 
         # run a round for each player
         for pid in self.players:
-            self.logging.info(f"new ecards round with leader player {self.players[pid]}")
+            self.logging.info(
+                f"new ecards round with leader player {self.players[pid]}"
+            )
             await self.execute_round(pid, prompt_deck.pop(), hands)
             ECards.refill_hands(hands, answer_deck)
         return await self.scoreboard()
@@ -99,10 +102,8 @@ class ECards(EGameFactory):
         Convenience method to construct the message to send to a non-leader player.
         Tells them the current prompt and their hand.
         """
-        end = "\n".join([f"{index+1}: {value}" for index,value in enumerate(list)])
+        end = "\n".join([f"{index+1}: {value}" for index, value in enumerate(list)])
         return "This round's prompt: {prompt}\n{end}"
-
-
 
     async def execute_round(self, leader: str, prompt: str, hands: dict):
         """Executes exactly one round of the game.
@@ -119,28 +120,44 @@ class ECards(EGameFactory):
         """
         # announce new round
         await self.channel.send(
-            embed=self.embed(f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: {prompt}")
+            embed=self.embed(
+                f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: {prompt}"
+            )
         )
 
         # construct content
-        content_dict = {pid: self.embed(f"This round's prompt: {prompt}\nYou're the leader for this round - sit back and relax!") if pid == leader else self.embed(ECards.construct_message(prompt,hands[pid])) for pid in hands}
-        
-        # construct pipelines
-        pipeline_dict = {pid: False if pid==leader else InteractionPipeline(
-            ChoiceInteraction(
-                *hands[pid],max_votes=1
+        content_dict = {
+            pid: self.embed(
+                f"This round's prompt: {prompt}\nYou're the leader for this round - sit back and relax!"
             )
-        ) for pid in hands}
+            if pid == leader
+            else self.embed(ECards.construct_message(prompt, hands[pid]))
+            for pid in hands
+        }
+
+        # construct pipelines
+        pipeline_dict = {
+            pid: False
+            if pid == leader
+            else InteractionPipeline(ChoiceInteraction(*hands[pid], max_votes=1))
+            for pid in hands
+        }
 
         # get all message responses
-        dm_response = await self._dm_players_unique_pipelines(content_dict, pipeline_dict)
+        dm_response = await self._dm_players_unique_pipelines(
+            content_dict, pipeline_dict
+        )
         replies = dm_response.get("message", [])
 
         # card played for each pid
         cards_played = {}
         for pid in hands:
             if pid != leader and pid in replies:
-                choices = [index for index,item in enumerate(replies[pid]["choice"]) if item == 1]
+                choices = [
+                    index
+                    for index, item in enumerate(replies[pid]["choice"])
+                    if item == 1
+                ]
                 if len(choices) > 0:
                     cards_played[pid] = hands[pid].pop(choices[0])
 
@@ -149,28 +166,34 @@ class ECards(EGameFactory):
         # shuffle responses to list
         shuffled_responses = list(cards_played.values())
         random.shuffle(shuffled_responses)
-        
+
         # construct message for channel
         end_str = "\n".join(shuffled_responses)
-        await self.channel.send(embed=self.embed(f"This round's answers:\n{end_str}\nAwaiting choice of a winner from {self.players[leader]}"))
+        await self.channel.send(
+            embed=self.embed(
+                f"This round's answers:\n{end_str}\nAwaiting choice of a winner from {self.players[leader]}"
+            )
+        )
 
         # dm the leader to choose
         leader_pipeline = InteractionPipeline(
-            ChoiceInteraction(
-                shuffled_responses,
-                max_votes=1
-            )
+            ChoiceInteraction(shuffled_responses, max_votes=1)
         )
-        choice_response = await self.dm_players("Please vote for the winning prompt.",[leader],leader_pipeline)
+        choice_response = await self.dm_players(
+            "Please vote for the winning prompt.", [leader], leader_pipeline
+        )
         choice_replies = choice_response.get("message", [])
 
         # find winning card
         winning_card = ""
-        if (leader in choice_replies):
-            choices = [index for index,item in enumerate(choice_replies[leader]["choice"]) if item == 1]
+        if leader in choice_replies:
+            choices = [
+                index
+                for index, item in enumerate(choice_replies[leader]["choice"])
+                if item == 1
+            ]
             if len(choices) > 0:
                 winning_card = shuffled_responses[choices[0]]
-
 
         # find winning user from card
         winning_pid = ""
@@ -181,11 +204,15 @@ class ECards(EGameFactory):
         # TODO: Logic for if no card is chosen
 
         # message channel with round result
-        await self.channel.send(embed=self.embed(f"The winning answer:\n{winning_card} (answer from {self.players[winning_pid]})"))
+        await self.channel.send(
+            embed=self.embed(
+                f"The winning answer:\n{winning_card} (answer from {self.players[winning_pid]})"
+            )
+        )
 
         # update scoreboard
-        self._add_score(winning_pid,1)
-    
+        self._add_score(winning_pid, 1)
+
     async def scrape(self, context) -> str:
         """TODO"""
 
@@ -198,7 +225,9 @@ class ECards(EGameFactory):
 
         return f"Scraped {num_prompts} prompts, and {num_safeties} safeties."
 
-    async def _dm_players_unique_pipelines(self, unique_content: dict, ipipelines: dict) -> dict:
+    async def _dm_players_unique_pipelines(
+        self, unique_content: dict, ipipelines: dict
+    ) -> dict:
         """DM unique content to each player, indexed by player id.
 
         :param unique_content: Embed content to send to player, indexed by the

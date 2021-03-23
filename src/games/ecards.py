@@ -167,11 +167,16 @@ class ECards(EGameFactory):
 
             # make sure result is present
             if "choice" in resp.get("response", {}):
-                # handle response
-                choices = list(filter(lambda i: i[1] == 1, resp["response"]["choice"].items()))
+                # invert choices:
+                inverted = {v: k for k, v in resp["response"]["choice"].items()}
 
-                if choices:
-                    cards_played[pid] = hands[pid].pop(choices[0])
+                # get, or falsey (min enumeration is 1)
+                index = inverted.get(1, 0)
+
+                if index:
+                    index = inverted[1] - 1
+                    cards_played[pid] = hands[pid].pop(index)
+                    self.logging.info(f"player {pid} chose {index}")
 
                 else:
                     # no card: log for now

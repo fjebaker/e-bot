@@ -81,6 +81,7 @@ class ECards(EGameFactory):
             )
             await self.execute_round(pid, prompt_deck.pop(), hands)
             ECards.refill_hands(hands, answer_deck)
+            asyncio.sleep(self.wait_duration)
         return await self.scoreboard()
 
     @staticmethod

@@ -3,10 +3,10 @@ from abstracts import EGameFactory
 
 import random
 
-from interactive import *
+from interactive import InteractionPipeline, ChoiceInteraction
 
 from utils import dmerge
-
+from utils.misc import dict_reverse_lookup
 
 class ECards(EGameFactory):
     """
@@ -21,14 +21,20 @@ class ECards(EGameFactory):
     wait_duration = 6
     min_players = 2
     cog_help = """
-    EGameFactory for a game where one player is given a prompt,
-    the other players select an answer from a set of safety answers,
-    and the head player selects their favourite answer.
+    Prompt card game to play with your friends.
+    Take it in turns to choose the funniest answer to a prompt that your peers chose from their hand of cards.
+    Commands:
+        .e ecards scrape - update the game with the latest prompts and cards
+        .e ecards start - start playing a game in the current channel
+        .e ecards stop - stop playing the active game
     """
     has_scrape = True
 
     file_prompts = "data/elash_prompts_{gid}.txt"
     file_safeties = "data/elash_safeties_{gid}.txt"
+
+    channel_prompts = "elash-prompts"
+    channel_safeties = "elash-safeties"
 
     def __init__(self, context):
         super().__init__(context, __name__)
@@ -72,7 +78,7 @@ class ECards(EGameFactory):
         answer_deck = random.sample(self.safeties, len(self.safeties))
 
         # create starting hands
-        hands = {pid: [answer_deck.pop() for _ in range(5)] for pid in self.players}
+        hands = {pid: [answer_deck.pop() for _ in range(5)] for pid in self.players.keys()}
 
         # run a round for each player
         for pid in self.players:
@@ -113,7 +119,7 @@ class ECards(EGameFactory):
         # announce new round
         await self.channel.send(
             embed=self.embed(
-                f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: {prompt}"
+                f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: **{prompt}**"
             )
         )
 
@@ -141,7 +147,7 @@ class ECards(EGameFactory):
                 ipl = InteractionPipeline(ChoiceInteraction(*hands[pid], max_votes=1))
 
                 # send message by storing coroutine
-                tasks.append(ipl.send_and_watch(dm_channel, content_dict[pid]))
+                tasks.append(ipl.send_and_watch(dm_channel, content_dict[pid], timeout=31))
             else:
                 # leader
                 tasks.append(dm_channel.send(embed=content_dict[pid]))
@@ -189,7 +195,7 @@ class ECards(EGameFactory):
 
         if len(shuffled_responses) == 0:
             # No-one played a card - skip the round
-            await self.channel.send(
+            return await self.channel.send(
                 embed=self.embed(
                     "No-one played a card. Are the players even there? Skipping this round..."
                 )
@@ -197,10 +203,8 @@ class ECards(EGameFactory):
         elif len(shuffled_responses) == 1:
             # Only one person played a card - award them the victory
             winning_card = shuffled_responses[0]
-            win_generator = filter(lambda i: i[1] == winning_card, cards_played.items())
-            if win_generator:
-                # get key
-                winning_pid = next(win_generator)[0]
+            winning_pid = dict_reverse_lookup(cards_played,winning_card)
+            if winning_pid:
 
                 # message channel with round result
                 await self.channel.send(
@@ -210,7 +214,9 @@ class ECards(EGameFactory):
                 )
 
                 # update scoreboard
-                self._add_score(winning_pid, 1)
+                return self._add_score(winning_pid, 1)
+            else:
+                return
         else:
             # Enough responses for a proper vote
             end_str = "\n".join(shuffled_responses)
@@ -227,7 +233,7 @@ class ECards(EGameFactory):
             leader_ipl = InteractionPipeline(
                 ChoiceInteraction(*shuffled_responses, max_votes=1)
             )
-            choice_response = await leader_ipl.send_and_watch(await self.players[leader].create_dm(), self.embed("Please vote for the winning prompt."))
+            choice_response = await leader_ipl.send_and_watch(await self.players[leader].create_dm(), self.embed("Please vote for the winning prompt."), timeout=31)
 
             # find winning card
             winning_card = ""
@@ -238,10 +244,8 @@ class ECards(EGameFactory):
                 if index:
                     winning_card = shuffled_responses[index-1]
 
-            win_generator = filter(lambda i: i[1] == winning_card, cards_played.items())
-            if win_generator:
-                # get key
-                winning_pid = next(win_generator)[0]
+            winning_pid = dict_reverse_lookup(cards_played,winning_card)
+            if winning_pid:
 
                 # little pause
                 asyncio.sleep(self.wait_duration)
@@ -254,13 +258,12 @@ class ECards(EGameFactory):
                 )
 
                 # update scoreboard
-                self._add_score(winning_pid, 1)
+                return self._add_score(winning_pid, 1)
 
             else:
                 #update scoreboard
                 self._add_score(leader, -1)
                 return await self.channel.send(embed=self.embed(f"No winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"))
-                
 
     async def scrape(self, context) -> str:
         """TODO"""

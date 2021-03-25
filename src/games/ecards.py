@@ -216,6 +216,7 @@ class ECards(EGameFactory):
                 # update scoreboard
                 return self._add_score(winning_pid, 1)
             else:
+                self.logging.warning(f"https://youtu.be/qNFrv0X1W2g {winning_card} not in {cards_played} despite being a value of {shuffled_responses}.")
                 return
         else:
             # Enough responses for a proper vote

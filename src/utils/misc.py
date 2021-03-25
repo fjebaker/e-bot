@@ -1,6 +1,6 @@
-def dict_reverse_lookup(dictionary : dict, value : str) -> str:
+def dict_reverse_lookup(dictionary : dict, value):
     """
-    Utility function to perform reverse lookup in a str : str dict where each value is unique
+    Utility function to perform reverse lookup in a dict where each value is unique
 
     :param dictionary: the dict to reverse lookup in
     :param value: the value to look for

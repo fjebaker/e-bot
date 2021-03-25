@@ -1,4 +1,4 @@
-def dict_reverse_lookup(dictionary : dict, value):
+def dict_reverse_lookup(dictionary: dict, value):
     """
     Utility function to perform reverse lookup in a dict where each value is unique
 

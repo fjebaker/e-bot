@@ -11,7 +11,7 @@ class ChoiceInteraction(Monitor):
 
     def __init__(self, choices, emojis, max_votes=0):
         self.logging = logging.getLogger(__name__ + ":" + self.__class__.__name__)
-        self.emojis = emojis
+        self.emojis = [EMOJI_FORWARD[key] for key in emojis]
         self.choices = choices
         self.max_votes = max_votes
 
@@ -52,6 +52,4 @@ class ChoiceInteraction(Monitor):
 
 class DefaultChoiceInteraction(ChoiceInteraction):
     def __init__(self, *choices, max_votes=0):
-        super().__init__(
-            choices, [EMOJI_FORWARD[i] for i in range(1, len(choices) + 1)], max_votes
-        )
+        super().__init__(choices, range(1, len(choices) + 1), max_votes)

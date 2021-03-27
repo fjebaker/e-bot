@@ -29,12 +29,7 @@ class EGameDispatch(GuildDispatch):
 
     @commands.command(name="test")
     async def test(self, context):
-        ip = InteractionPipeline(MessageInteraction())
-
-        e = discord.Embed(title="Test")
-        result = await ip.send_and_watch(context.channel, e)
-
-        self.logging.info(result["result"])
+        ...
 
 
 def setup(bot):

@@ -285,11 +285,9 @@ class EGameFactory:
         """
         ipl = InteractionPipeline(
             ChoiceInteraction(
-                [
-                    f"Press {EMOJI_FORWARD['checkmark']} to vote to continue with the same players.",
-                    f"Press {EMOJI_FORWARD['busts-in-silhouette']} to vote to continue with new players.",
-                    f"Press{EMOJI_FORWARD['stop-sign']} to vote to stop the game.",
-                ],
+                f"Press {EMOJI_FORWARD['checkmark']} to vote to continue with the same players.",
+                f"Press {EMOJI_FORWARD['busts-in-silhouette']} to vote to continue with new players.",
+                f"Press {EMOJI_FORWARD['stop-sign']} to vote to stop the game.",
                 max_votes=self._num_players,
             ).set_emojis(
                 # custom emojis
@@ -346,8 +344,8 @@ class EGameFactory:
 
             @wraps(func)
             async def wrapped_function(_self, *args, **kwargs):
-                for round_number in count(firstval=1):
-                    func(*args, **kwargs)
+                for round_number in count(1):
+                    await func(_self, *args, **kwargs)
                     # check if max rounds exceeded
                     if max_rounds and round_number >= max_rounds:
                         break

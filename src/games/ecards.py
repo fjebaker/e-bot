@@ -3,7 +3,7 @@ from abstracts import EGameFactory
 
 import random
 
-from interactive import InteractionPipeline, ChoiceInteraction
+from interactive import InteractionPipeline, DefaultChoiceInteraction
 
 from utils import dmerge
 from utils.misc import dict_reverse_lookup
@@ -50,7 +50,6 @@ class ECards(EGameFactory):
         Method for starting the E Card game.
         Reads in prompts, puts the deck in a particular state, and runs the game.
         """
-
         # check if prompts
         if self.prompts == self.safeties == None:
             # info message
@@ -159,7 +158,9 @@ class ECards(EGameFactory):
 
             if pid != leader:
                 # make pipeline
-                ipl = InteractionPipeline(ChoiceInteraction(*hands[pid], max_votes=1))
+                ipl = InteractionPipeline(
+                    DefaultChoiceInteraction(*hands[pid], max_votes=1)
+                )
 
                 # send message by storing coroutine
                 tasks.append(
@@ -251,7 +252,7 @@ class ECards(EGameFactory):
 
             # dm the leader to choose
             leader_ipl = InteractionPipeline(
-                ChoiceInteraction(*shuffled_responses, max_votes=1)
+                DefaultChoiceInteraction(*shuffled_responses, max_votes=1)
             )
             choice_response = await leader_ipl.send_and_watch(
                 await self.players[leader].create_dm(),

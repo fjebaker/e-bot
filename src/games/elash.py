@@ -210,7 +210,7 @@ class ELash(EGameFactory):
         answers = [solutions[k] for k in pids]
 
         ipl = InteractionPipeline(
-            ChoiceInteraction(*answers, max_votes=self._num_players)
+            DefaultChoiceInteraction(*answers, max_votes=self._num_players)
         )
         response = await ipl.send_and_watch(
             self.channel, self.embed(f"Vote for your favourite:\n**{prompt}**\n")

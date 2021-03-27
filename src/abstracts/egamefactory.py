@@ -284,18 +284,15 @@ class EGameFactory:
             optional, defaults to 1
         """
         ipl = InteractionPipeline(
-            ButtonInteraction(
-                "checkmark",
-                helpstring=f"Press {EMOJI_FORWARD['checkmark']} to vote to continue with the same players.",
-            ),
-            ButtonInteraction(
-                "busts-in-silhouette",
-                helpstring=f"Press {EMOJI_FORWARD['busts-in-silhouette']} to vote to continue with new players.",
-            ),
-            ButtonInteraction(
-                "stop-sign",
-                helpstring=f"Press{EMOJI_FORWARD['stop-sign']} to vote to stop the game.",
-            ),
+            ChoiceInteraction(
+                [
+                    f"Press {EMOJI_FORWARD['checkmark']} to vote to continue with the same players.",
+                    f"Press {EMOJI_FORWARD['busts-in-silhouette']} to vote to continue with new players.",
+                    f"Press{EMOJI_FORWARD['stop-sign']} to vote to stop the game.",
+                ],
+                ["checkmark", "busts-in-silhouette", "stop-sign"],
+                max_votes=self._num_players,
+            )
         )
         result = await ipl.send_and_watch(
             self.channel,
@@ -305,7 +302,7 @@ class EGameFactory:
             timeout=31,
         )
         response = result.get("response", {})
-        buttons = response.get("button", {})
+        buttons = response.get("choice", {})
         votes_to_continue = buttons.get("checkmark", 0)
         votes_to_change_players = buttons.get("busts-in-silhouette", 0)
         votes_to_stop = buttons.get("stop-sign", 0)

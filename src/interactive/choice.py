@@ -9,9 +9,9 @@ from interactive.monitor import Monitor
 class ChoiceInteraction(Monitor):
     name = "choice"
 
-    def __init__(self, *choices, max_votes=0):
+    def __init__(self, choices, emojis, max_votes=0):
         self.logging = logging.getLogger(__name__ + ":" + self.__class__.__name__)
-        self.emojis = [EMOJI_FORWARD[i] for i in range(1, len(choices) + 1)]
+        self.emojis = emojis
         self.choices = choices
         self.max_votes = max_votes
 
@@ -48,3 +48,10 @@ class ChoiceInteraction(Monitor):
             for i in message.reactions
             if i.emoji in self.emojis
         }
+
+
+class DefaultChoiceInteraction(ChoiceInteraction):
+    def __init__(self, *choices, max_votes=0):
+        super().__init__(
+            choices, [EMOJI_FORWARD[i] for i in range(1, len(choices) + 1)], max_votes
+        )

@@ -86,7 +86,8 @@ class ECards(EGameFactory):
         return await self.execute_rotation(prompt_deck, answer_deck, hands)
 
     @EGameFactory.execute_rounds(max_rounds=0, prompt_continue=True)
-    async def execute_rotation(prompt_deck: list, answer_deck: list, hands: dict):
+    async def execute_rotation(self, prompt_deck: list, answer_deck: list, hands: dict):
+
         """
         Runs a round for each player
         """

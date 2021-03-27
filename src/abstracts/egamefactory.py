@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from utils import dmerge
 
-from interactive import InteractionPipeline, ReplyInteraction
+from interactive import InteractionPipeline, ChoiceInteraction, ReplyInteraction
 
 from econfig import PATH_EXTENSION
 

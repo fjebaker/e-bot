@@ -1,8 +1,6 @@
 import logging
 
-import discord
-
-from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
+from utils.lookups import EMOJI_FORWARD
 from interactive.monitor import Monitor
 
 

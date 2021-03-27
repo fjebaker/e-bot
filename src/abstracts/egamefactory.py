@@ -1,15 +1,12 @@
 import logging
-from types import FunctionType
 
 import discord
 
 import asyncio
-import random
 import os
 from collections import defaultdict
 
-from utils import Clock, dmerge
-from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
+from utils import dmerge
 
 from interactive import InteractionPipeline, ChoiceInteraction, ReplyInteraction
 

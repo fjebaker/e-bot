@@ -91,6 +91,11 @@ class ECards(EGameFactory):
         """
         Runs a round for each player
         """
+        # ensure every player has a hand
+        for pid in self.players:
+            if pid not in hands:
+                hands[pid] = [answer_deck.pop() for _ in range(5)]
+        # round for each player
         for pid in self.players:
             self.logging.info(
                 f"new ecards round with leader player {self.players[pid]}"

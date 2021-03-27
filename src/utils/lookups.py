@@ -9,6 +9,8 @@ EMOJI_FORWARD = {
     "up-arrow": "\U00002B06",
     "down-arrow": "\U00002B07",
     "temperature": "\U0001F912",
+    "busts-in-silhouette": "\U0001F465",
+    "stop-sign": "\U0001F601",
 }
 
 # reverse

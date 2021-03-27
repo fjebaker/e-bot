@@ -211,7 +211,7 @@ class EGameFactory:
         scores = sorted(
             [(pid, tallied_scores[pid]) for pid in self.players.keys()],
             key=lambda i: i[1],
-            reverse=True
+            reverse=True,
         )
         scoreboard = [
             f"{i+1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)
@@ -270,3 +270,102 @@ class EGameFactory:
         self.logging.info(f"number of players {self._num_players}")
 
         return self._num_players
+
+    async def check_continue(self, min_players: int = 1):
+        """
+        Brings up a dialogue on the main channel to ask players whether they want to continue with
+        same players, poll for new players or stop playing completely.
+
+        :param min_players: the minimum number of players who need to join in order to continue.
+            optional, defaults to 1
+        """
+        ipl = InteractionPipeline(
+            ButtonInteraction(
+                "checkmark",
+                helpstring=f"Press {EMOJI_FORWARD['checkmark']} to vote to continue with the same players.",
+            ),
+            ButtonInteraction(
+                "busts-in-silhouette",
+                helpstring=f"Press {EMOJI_FORWARD['busts-in-silhouette']} to vote to continue with new players.",
+            ),
+            ButtonInteraction(
+                "stop-sign",
+                helpstring=f"Press{EMOJI_FORWARD['stop-sign']} to vote to stop the game.",
+            ),
+        )
+        result = await ipl.send_and_watch(
+            self.channel,
+            self.embed(
+                "Finished a round! Vote below to continue the game, change players, or stop the game."
+            ),
+            timeout=31,
+        )
+        response = result.get("response", {})
+        buttons = response.get("button", {})
+        votes_to_continue = buttons.get("checkmark", 0)
+        votes_to_change_players = buttons.get("busts-in-silhouette", 0)
+        votes_to_stop = buttons.get("stop-sign", 0)
+        # prioritise stop, change players and then continue
+        if (
+            votes_to_stop >= votes_to_change_players
+            and votes_to_stop >= votes_to_continue
+        ):
+            return False
+        elif votes_to_change_players >= votes_to_continue:
+            # gather new players
+            num_players = await self.gather_players()
+            return num_players >= min_players
+        else:
+            return True
+
+    @staticmethod
+    def execute_rounds(max_rounds=-1, prompt_continue=True):
+        """
+        Decorator method for games with multiple rounds, implementing optional checks at the end
+        of each round as to whether player want to continue with same players, poll for new players
+        or stop playing completely.
+        Note that this will throw an error if max_rounds is set to -1 and prompt_continue is set to False,
+        as this would represent infinite rounds with no way to stop.
+
+        :param max_rounds: the maximum number of rounds to play. If set to -1, will have no maximum.
+            optional, defaults to -1
+        :param prompt_continue: whether to prompt users to continue. optional, defaults to True
+        """
+
+        def decorator(func):
+            if max_rounds == -1:  # does not depend on round number
+                if prompt_continue:  # checks to see if players wish to continue
+
+                    async def condition(_self, round: int):
+                        return await _self.check_continue()
+
+                else:
+                    raise Exception(
+                        "Cannot call execute_rounds with max_rounds=-1 and prompt_continue=False - doing so would lead to infinite loop."
+                    )
+            else:  # has a maximum number of rounds
+                if prompt_continue:  # checks to see if players wish to continue
+
+                    async def condition(_self, round: int):
+                        if round > max_rounds:
+                            return False
+                        else:
+                            return await _self.check_continue()
+
+                else:  # just plays out all the rounds
+
+                    async def condition(_self, round: int):
+                        return round <= max_rounds
+
+            async def wrapped_function(_self, *args, **kwargs):
+                # Run first round
+                func(*args, **kwargs)
+                round_number = 2
+                # Run further rounds
+                while await condition(_self, round_number):
+                    func(*args, **kwargs)
+                    round_number += 1
+
+            return wrapped_function
+
+        return decorator

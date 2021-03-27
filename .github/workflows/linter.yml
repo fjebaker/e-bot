@@ -25,6 +25,7 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 src
-    - name: Lint with pylint
-      run: |
-        pylint src
+#    - name: Lint with pylint
+#      run: |
+#        pylint src
+# disabled for now

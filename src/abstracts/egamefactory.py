@@ -15,6 +15,10 @@ from interactive import *
 
 from econfig import PATH_EXTENSION
 
+from functools import wraps
+
+from itertools import count
+
 
 def replace_rules(content: str) -> str:
     """TODO"""
@@ -271,7 +275,7 @@ class EGameFactory:
 
         return self._num_players
 
-    async def check_continue(self, min_players: int = 1):
+    async def check_continue(self, min_players: int = 1) -> bool:
         """
         Brings up a dialogue on the main channel to ask players whether they want to continue with
         same players, poll for new players or stop playing completely.
@@ -318,53 +322,35 @@ class EGameFactory:
         else:
             return True
 
-    @staticmethod
-    def execute_rounds(max_rounds=-1, prompt_continue=True):
+    def execute_rounds(max_rounds=0, prompt_continue=True):
         """
         Decorator method for games with multiple rounds, implementing optional checks at the end
         of each round as to whether player want to continue with same players, poll for new players
         or stop playing completely.
-        Note that this will throw an error if max_rounds is set to -1 and prompt_continue is set to False,
+        Note that this will throw an error if max_rounds is set to 0 and prompt_continue is set to False,
         as this would represent infinite rounds with no way to stop.
 
-        :param max_rounds: the maximum number of rounds to play. If set to -1, will have no maximum.
-            optional, defaults to -1
+        :param max_rounds: the maximum number of rounds to play. If set to 0, will have no maximum.
+            optional, defaults to 0
         :param prompt_continue: whether to prompt users to continue. optional, defaults to True
         """
 
         def decorator(func):
-            if max_rounds == -1:  # does not depend on round number
-                if prompt_continue:  # checks to see if players wish to continue
+            if max_rounds == 0 and not prompt_continue:
+                raise Exception(
+                    "Cannot call execute_rounds with max_rounds=-1 and prompt_continue=False - doing so would lead to infinite loop."
+                )
 
-                    async def condition(_self, round: int):
-                        return await _self.check_continue()
-
-                else:
-                    raise Exception(
-                        "Cannot call execute_rounds with max_rounds=-1 and prompt_continue=False - doing so would lead to infinite loop."
-                    )
-            else:  # has a maximum number of rounds
-                if prompt_continue:  # checks to see if players wish to continue
-
-                    async def condition(_self, round: int):
-                        if round > max_rounds:
-                            return False
-                        else:
-                            return await _self.check_continue()
-
-                else:  # just plays out all the rounds
-
-                    async def condition(_self, round: int):
-                        return round <= max_rounds
-
+            @wraps(func)
             async def wrapped_function(_self, *args, **kwargs):
-                # Run first round
-                func(*args, **kwargs)
-                round_number = 2
-                # Run further rounds
-                while await condition(_self, round_number):
+                for round_number in count(firstval=1):
                     func(*args, **kwargs)
-                    round_number += 1
+                    # check if max rounds exceeded
+                    if max_rounds and round_number >= max_rounds:
+                        break
+                    # check if users wish to stop
+                    if prompt_continue and not await _self.check_continue():
+                        break
 
             return wrapped_function
 

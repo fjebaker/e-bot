@@ -12,6 +12,10 @@ from interactive import InteractionPipeline, ReplyInteraction
 
 from econfig import PATH_EXTENSION
 
+from functools import wraps
+
+from itertools import count
+
 
 def replace_rules(content: str) -> str:
     """TODO"""
@@ -267,3 +271,85 @@ class EGameFactory:
         self.logging.info(f"number of players {self._num_players}")
 
         return self._num_players
+
+    async def check_continue(self, min_players: int = 1) -> bool:
+        """
+        Brings up a dialogue on the main channel to ask players whether they want to continue with
+        same players, poll for new players or stop playing completely.
+
+        :param min_players: the minimum number of players who need to join in order to continue.
+            optional, defaults to 1
+        """
+        ipl = InteractionPipeline(
+            ChoiceInteraction(
+                f"Press {EMOJI_FORWARD['checkmark']} to vote to continue with the same players.",
+                f"Press {EMOJI_FORWARD['busts-in-silhouette']} to vote to continue with new players.",
+                f"Press {EMOJI_FORWARD['stop-sign']} to vote to stop the game.",
+                max_votes=self._num_players,
+            ).set_emojis(
+                # custom emojis
+                [
+                    EMOJI_FORWARD["checkmark"],
+                    EMOJI_FORWARD["busts-in-silhouette"],
+                    EMOJI_FORWARD["stop-sign"],
+                ]
+            )
+        )
+        result = await ipl.send_and_watch(
+            self.channel,
+            self.embed(
+                "Finished a round! Vote below to continue the game, change players, or stop the game."
+            ),
+            timeout=31,
+        )
+        response = result.get("response", {})
+        buttons = response.get("choice", {})
+        votes_to_continue = buttons.get("checkmark", 0)
+        votes_to_change_players = buttons.get("busts-in-silhouette", 0)
+        votes_to_stop = buttons.get("stop-sign", 0)
+        # prioritise stop, change players and then continue
+        if (
+            votes_to_stop >= votes_to_change_players
+            and votes_to_stop >= votes_to_continue
+        ):
+            return False
+        elif votes_to_change_players >= votes_to_continue:
+            # gather new players
+            num_players = await self.gather_players()
+            return num_players >= min_players
+        else:
+            return True
+
+    def execute_rounds(max_rounds=0, prompt_continue=True):
+        """
+        Decorator method for games with multiple rounds, implementing optional checks at the end
+        of each round as to whether player want to continue with same players, poll for new players
+        or stop playing completely.
+        Note that this will throw an error if max_rounds is set to 0 and prompt_continue is set to False,
+        as this would represent infinite rounds with no way to stop.
+
+        :param max_rounds: the maximum number of rounds to play. If set to 0, will have no maximum.
+            optional, defaults to 0
+        :param prompt_continue: whether to prompt users to continue. optional, defaults to True
+        """
+
+        def decorator(func):
+            if max_rounds == 0 and not prompt_continue:
+                raise Exception(
+                    "Cannot call execute_rounds with max_rounds=-1 and prompt_continue=False - doing so would lead to infinite loop."
+                )
+
+            @wraps(func)
+            async def wrapped_function(_self, *args, **kwargs):
+                for round_number in count(1):
+                    await func(_self, *args, **kwargs)
+                    # check if max rounds exceeded
+                    if max_rounds and round_number >= max_rounds:
+                        break
+                    # check if users wish to stop
+                    if prompt_continue and not await _self.check_continue():
+                        break
+
+            return wrapped_function
+
+        return decorator

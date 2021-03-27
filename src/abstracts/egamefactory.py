@@ -11,7 +11,7 @@ from collections import defaultdict
 from utils import Clock, dmerge
 from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
 
-from interactive import *
+from interactive import InteractionPipeline, ChoiceInteraction, ReplyInteraction
 
 from econfig import PATH_EXTENSION
 

@@ -5,11 +5,6 @@ import discord
 from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
 from interactive.monitor import Monitor
 
-from typing import TypeVar
-
-T = TypeVar("T", bound="ChoiceInteraction")
-
-
 class ChoiceInteraction(Monitor):
     name = "choice"
 
@@ -19,7 +14,7 @@ class ChoiceInteraction(Monitor):
         self.choices = choices
         self.max_votes = max_votes
 
-    def set_emojis(self: T, emojis: list) -> T:
+    def set_emojis(self, emojis: list) -> "ChoiceInteraction":
         """Set the emojis to present in the choice.
 
         :param emojis: Emojis to use in choice, must be the same length as number of

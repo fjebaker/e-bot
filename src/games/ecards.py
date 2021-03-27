@@ -84,6 +84,13 @@ class ECards(EGameFactory):
         }
 
         # run a round for each player
+        return await self.execute_rotation(prompt_deck, answer_deck, hands)
+
+    @EGameFactory.execute_rounds()
+    async def execute_rotation(prompt_deck: list, answer_deck: list, hands: dict):
+        """
+        Runs a round for each player
+        """
         for pid in self.players:
             self.logging.info(
                 f"new ecards round with leader player {self.players[pid]}"

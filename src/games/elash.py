@@ -85,6 +85,7 @@ class ELash(EGameFactory):
         # do a round
         return await self.execute_round()
 
+    @EGameFactory.execute_rounds()
     async def execute_round(self):
         """Executes exactly one round of the game.
 

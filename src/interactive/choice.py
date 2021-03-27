@@ -9,11 +9,24 @@ from interactive.monitor import Monitor
 class ChoiceInteraction(Monitor):
     name = "choice"
 
-    def __init__(self, choices, emojis, max_votes=0):
+    def __init__(self, *choices, max_votes=0):
         self.logging = logging.getLogger(__name__ + ":" + self.__class__.__name__)
-        self.emojis = emojis
+        self.emojis = [EMOJI_FORWARD[i] for i in range(1, len(choices) + 1)]
         self.choices = choices
         self.max_votes = max_votes
+
+    def set_emojis(self, emojis: list) -> ChoiceInteraction:
+        """Set the emojis to present in the choice.
+
+        :param emojis: Emojis to use in choice, must be the same length as number of
+        choices passed. Raises assertion if not.
+
+        :return: `self` for function chaining.
+        """
+        assert len(emojis) == len(self.emojis)
+        self.emojis = emojis
+
+        return self
 
     def format(self, embed):
         for i, choice in enumerate(self.choices):
@@ -48,10 +61,3 @@ class ChoiceInteraction(Monitor):
             for i in message.reactions
             if i.emoji in self.emojis
         }
-
-
-class DefaultChoiceInteraction(ChoiceInteraction):
-    def __init__(self, *choices, max_votes=0):
-        super().__init__(
-            choices, [EMOJI_FORWARD[i] for i in range(1, len(choices) + 1)], max_votes
-        )

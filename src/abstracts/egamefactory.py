@@ -290,8 +290,14 @@ class EGameFactory:
                     f"Press {EMOJI_FORWARD['busts-in-silhouette']} to vote to continue with new players.",
                     f"Press{EMOJI_FORWARD['stop-sign']} to vote to stop the game.",
                 ],
-                ["checkmark", "busts-in-silhouette", "stop-sign"],
                 max_votes=self._num_players,
+            ).set_emojis(
+                # custom emojis
+                [
+                    EMOJI_FORWARD["checkmark"],
+                    EMOJI_FORWARD["busts-in-silhouette"],
+                    EMOJI_FORWARD["stop-sign"],
+                ]
             )
         )
         result = await ipl.send_and_watch(

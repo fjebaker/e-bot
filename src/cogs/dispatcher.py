@@ -5,11 +5,12 @@ from games.ecards import ECards
 import discord
 from discord.ext import commands
 
+from interactive import InteractionPipeline, MessageInteraction
+
+
 COG_HELP = """
     TODO
 """
-
-from interactive import *
 
 
 class EGameDispatch(GuildDispatch):

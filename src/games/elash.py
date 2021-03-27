@@ -1,19 +1,11 @@
-import asyncio
 from abstracts import EGameFactory
-
-import discord
-from discord.ext import commands
 
 import itertools
 import random
 import collections
-import os
 
 from utils.lookups import EMOJI_FORWARD
-from utils import dmerge
-from interactive import *
-
-from econfig import PATH_EXTENSION
+from interactive import InteractionPipeline, MessageInteraction, ButtonInteraction, ChoiceInteraction
 
 
 def randomize_prompts(prompts: list) -> list:
@@ -60,11 +52,11 @@ class ELash(EGameFactory):
         """Main entry"""
 
         # check if prompts
-        if self.prompts == self.safeties == None:
+        if self.prompts is self.safeties is None:
             # info message
             self.logging.info(f"Reading prompts and safety files for {self.guild.id}.")
             await self.channel.send(
-                embed=self.embed(f"Reading prompts and safety files...")
+                embed=self.embed("Reading prompts and safety files...")
             )
 
             # read files
@@ -171,7 +163,7 @@ class ELash(EGameFactory):
             await self._modify_vote_board(response["message"], result)
 
             # tally scores
-            [self._add_score(i[1], i[0]) for i in result]
+            [self._add_score(i[1], i[0]) for i in result] # pylint: disable=expression-not-assigned
 
         # print scoreboard
         await self.scoreboard()

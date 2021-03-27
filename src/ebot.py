@@ -32,7 +32,7 @@ class EBot(commands.Bot):
         )
 
     async def on_command_error(self, context, error):
-        #pylint: disable=arguments-differ
+        # pylint: disable=arguments-differ
         if isinstance(error, commands.CommandNotFound):
             self.logging.info(f"Call to unknown command {error}")
             await context.send(error)

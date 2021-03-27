@@ -5,7 +5,12 @@ import random
 import collections
 
 from utils.lookups import EMOJI_FORWARD
-from interactive import InteractionPipeline, MessageInteraction, ButtonInteraction, ChoiceInteraction
+from interactive import (
+    InteractionPipeline,
+    MessageInteraction,
+    ButtonInteraction,
+    ChoiceInteraction,
+)
 
 
 def randomize_prompts(prompts: list) -> list:
@@ -163,7 +168,9 @@ class ELash(EGameFactory):
             await self._modify_vote_board(response["message"], result)
 
             # tally scores
-            [self._add_score(i[1], i[0]) for i in result] # pylint: disable=expression-not-assigned
+            [
+                self._add_score(i[1], i[0]) for i in result
+            ]  # pylint: disable=expression-not-assigned
 
         # print scoreboard
         await self.scoreboard()

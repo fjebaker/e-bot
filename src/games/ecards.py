@@ -5,7 +5,6 @@ import random
 
 from interactive import InteractionPipeline, ChoiceInteraction
 
-from utils import dmerge
 from utils.misc import dict_reverse_lookup
 
 
@@ -52,11 +51,11 @@ class ECards(EGameFactory):
         """
 
         # check if prompts
-        if self.prompts == self.safeties == None:
+        if self.prompts is self.safeties is None:
             # info message
             self.logging.info(f"Reading prompts and safety files for {self.guild.id}.")
             await self.channel.send(
-                embed=self.embed(f"Reading prompts and safety files...")
+                embed=self.embed("Reading prompts and safety files...")
             )
 
             # read files

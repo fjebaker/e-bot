@@ -40,10 +40,7 @@ class InteractionPipeline:
         em = message.embeds[-1]
 
         # extract footer info
-        if em.footer:
-            footer_text = em.footer.text
-        else:
-            footer_text = ""
+        footer_text = em.footer.text if em.footer else ""
 
         streaming = [i for i in self.pipeline if i.is_stream]
         observing = [i for i in self.pipeline if not i.is_stream]

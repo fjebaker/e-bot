@@ -3,8 +3,6 @@ import logging
 import discord
 from discord.ext import commands
 
-import asyncio
-
 
 class GuildDispatch(commands.Cog):
     """Superclass for creating cogs for game instance management. Creates a lookup

@@ -1,17 +1,14 @@
 import logging
-from types import FunctionType
 
 import discord
 
 import asyncio
-import random
 import os
 from collections import defaultdict
 
-from utils import Clock, dmerge
-from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
+from utils import dmerge
 
-from interactive import *
+from interactive import InteractionPipeline, ReplyInteraction
 
 from econfig import PATH_EXTENSION
 
@@ -211,7 +208,7 @@ class EGameFactory:
         scores = sorted(
             [(pid, tallied_scores[pid]) for pid in self.players.keys()],
             key=lambda i: i[1],
-            reverse=True
+            reverse=True,
         )
         scoreboard = [
             f"{i+1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)

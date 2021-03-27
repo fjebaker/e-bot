@@ -1,6 +1,5 @@
 import logging
 
-import discord
 from discord.ext import commands
 
 _ID = 691729794462908487

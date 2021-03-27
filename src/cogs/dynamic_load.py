@@ -1,6 +1,5 @@
 import logging
 
-import discord
 from discord.ext import commands
 
 COG_HELP = """TODO: help"""

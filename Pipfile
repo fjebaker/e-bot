@@ -19,6 +19,8 @@ sphinx = "*"
 pytest = "*"
 pytest-socket = "*"
 pytest-asyncio = "*"
+pytest-cov = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.9"

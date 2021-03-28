@@ -7,18 +7,18 @@ from discord.ext import commands
 
 from econfig import PATH_EXTENSION
 
-# load uri array
-POPE_URIS = []
-with open(os.path.join(PATH_EXTENSION, "data/popelist.txt"), "r") as f:
-    POPE_URIS = [i for i in f.read().split("\n") if i != ""]
-
 
 class PopeImage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logging = logging.getLogger(__name__)
 
-    def _has_pope(self, content):
+        self.pope_uris: list[str]
+
+        with open(os.path.join(PATH_EXTENSION, "data/popelist.txt"), "r") as f:
+            self.pope_uris = list(filter(lambda i: i != "", f.read().split("\n")))
+
+    def _has_pope(self, content: str) -> bool:
         return re.search(r"pope", content, re.IGNORECASE) is not None
 
     @commands.Cog.listener()
@@ -29,8 +29,8 @@ class PopeImage(commands.Cog):
             ...
         else:
             if self._has_pope(message.content):
-                i = random.randint(0, len(POPE_URIS) - 1)
-                msg = f"#{i}\n{POPE_URIS[i]}"
+                i = random.randint(0, len(self.pope_uris) - 1)
+                msg = f"#{i}\n{self.pope_uris[i]}"
                 await message.reply(msg)
 
 

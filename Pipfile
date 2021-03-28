@@ -4,7 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [scripts]
-lint = "make lint"
+flake = "flake8"
+lint = "pylint"
+test = "pytest -vvv"
 
 [packages]
 discord = "*"
@@ -14,6 +16,9 @@ black = "*"
 flake8 = "*"
 pylint = "*"
 sphinx = "*"
+pytest = "*"
+pytest-socket = "*"
+pytest-asyncio = "*"
 
 [requires]
 python_version = "3.9"

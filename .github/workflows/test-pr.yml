@@ -32,8 +32,8 @@ jobs:
 
     - name: Comment coverage
       uses: machine-learning-apps/pr-comment@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          path: cov.txt
-        
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        path: cov.txt
+      

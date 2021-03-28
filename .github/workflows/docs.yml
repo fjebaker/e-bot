@@ -1,0 +1,40 @@
+# Automatically compile docs and push to pages on master branch
+# https://github.com/choldgraf/deploy_configurations/blob/master/.github/workflows/main.yml
+
+name: "Auto Documentation with GH Pages"
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Python setup
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+  
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install sphinx
+        pip install ghp-import
+        PATH="${PATH}:${HOME}/.local/bin"
+
+    - name: Build sphinx
+      run: |
+        sphinx-build docs docs/_build
+      
+    - name: Publish on pages branch
+      run: |
+        sudo chown -R $(whoami):$(whoami) .
+        git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+        git config --global user.name "$GITHUB_ACTOR"
+        git remote set-url origin "https://$GITHUB_ACTOR:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
+        ghp-import -f -p -n docs/_build

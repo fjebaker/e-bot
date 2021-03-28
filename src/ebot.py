@@ -9,6 +9,7 @@ import cogs
 
 class EBot(commands.Bot):
     """ TODO """
+
     def __init__(self):
         super().__init__(command_prefix=".e ", activity=discord.Game(name="Loading..."))
         self.logging = logging.getLogger(__name__)

@@ -22,10 +22,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pylint discord
 
+    # run even if failures
     - name: Lint with flake8
+      if: always()
       run: |
         flake8 src
 
     - name: Lint with pylint
+      if: always()
       run: |
         pylint src

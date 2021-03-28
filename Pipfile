@@ -13,6 +13,7 @@ discord = "*"
 black = "*"
 flake8 = "*"
 pylint = "*"
+sphinx = "*"
 
 [requires]
 python_version = "3.9"

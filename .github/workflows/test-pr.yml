@@ -22,7 +22,7 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest -vvv .
+        pytest --cov=src -vvv .
     
 #    - name: Coverage report
 #      run: |

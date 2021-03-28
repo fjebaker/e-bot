@@ -1,9 +1,8 @@
 import pytest
 
 from unittest.mock import call
-from unittest.mock import MagicMock
 
-from src.cogs.dynamic_load import DynamicLoad
+from cogs.dynamic_load import DynamicLoad
 
 # fixtures
 
@@ -12,7 +11,7 @@ from src.cogs.dynamic_load import DynamicLoad
 def dynamic_load(bot):
     mock_load = DynamicLoad(bot)
 
-    mock_load.bot.extensions = {"src.cogs.dynamic_load": None, "cogs.test_cog": None}
+    mock_load.bot.extensions = {"cogs.dynamic_load": None, "cogs.test_cog": None}
 
     return mock_load
 

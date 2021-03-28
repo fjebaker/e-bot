@@ -1,7 +1,7 @@
 # Automatically compile docs and push to pages on master branch
 # https://github.com/choldgraf/deploy_configurations/blob/master/.github/workflows/main.yml
 
-name: "Auto Documentation with GH Pages"
+name: "docs"
 
 on:
   push:

@@ -1,12 +1,9 @@
-from abstracts import GuildDispatch
+from discord.ext import commands
+
 from games.elash import ELash
 from games.ecards import ECards
 
-import discord
-from discord.ext import commands
-
-from interactive import InteractionPipeline, MessageInteraction
-
+from abstracts import GuildDispatch
 
 COG_HELP = """
     TODO
@@ -28,9 +25,9 @@ class EGameDispatch(GuildDispatch):
     async def cards(self, context, cmd: str):
         await self._entry(context, cmd, ECards)
 
-    @commands.command(name="test")
-    async def test(self, context):
-        ...
+    # @commands.command(name="test")
+    # async def test(self, context):
+    #     ...
 
 
 def setup(bot):

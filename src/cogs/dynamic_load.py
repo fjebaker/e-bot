@@ -11,10 +11,13 @@ class DynamicLoad(commands.Cog):
         self.logging = logging.getLogger(__name__)
 
     def _reload_all_cogs(self) -> list:
+        # pylint: disable=unnecessary-comprehension
+
         self.logging.info("Reloading cogs...")
 
         _reloaded = []
-        cogs = [i for i in self.bot.extensions.keys()]  # local copy
+        # local copy
+        cogs = [i for i in self.bot.extensions.keys()]
         for cog in cogs:
             if cog == __name__:
                 # skip
@@ -76,6 +79,7 @@ class DynamicLoad(commands.Cog):
             await context.send(resp)
 
     async def cog_command_error(self, context, error):
+        # pylint: disable=arguments-differ
         if isinstance(error, commands.errors.MissingRequiredArgument):
             await context.send(f"Missing Argument!\n{COG_HELP}")
         else:

@@ -1,11 +1,10 @@
 import logging
+import random
+import re
+import os
 
 from discord.ext import commands
 
-import random
-import re
-
-import os
 from econfig import PATH_EXTENSION
 
 # load uri array

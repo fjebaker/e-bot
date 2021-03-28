@@ -1,9 +1,9 @@
 import logging
+import random
+import re
 
 from discord.ext import commands
 
-import random
-import re
 
 COG_HELP = """ No help available for this cog. """
 

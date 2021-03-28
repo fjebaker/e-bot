@@ -1,8 +1,8 @@
 import logging
+import re
 
 from discord.ext import commands
 
-import re
 
 EMOJIS = ["\U0001F621", "\U0001F92C", "\U0001F624", "\U0001F47F", "\U0001F329"]
 

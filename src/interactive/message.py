@@ -18,6 +18,7 @@ class MessageInteraction(Monitor):
         return embed
 
     async def monitor(self, original, message) -> dict:
+        # pylint: disable=arguments-differ
 
         self.logging.info(
             f"Reply to {original.id}: {message.author}: {message.content}"

@@ -1,20 +1,19 @@
 import logging
+import asyncio
+import os
+
+from functools import wraps
+from itertools import count
+from collections import defaultdict
 
 import discord
 
-import asyncio
-import os
-from collections import defaultdict
-
 from utils import dmerge
+from utils.lookups import EMOJI_FORWARD
 
 from interactive import InteractionPipeline, ChoiceInteraction, ReplyInteraction
 
 from econfig import PATH_EXTENSION
-
-from functools import wraps
-
-from itertools import count
 
 
 def replace_rules(content: str) -> str:
@@ -28,8 +27,10 @@ class EGameFactory:
     """E Game Factory Superclass
 
     To be inherited by subclassing game cogs, providing basic interaction
-    such as polling, player and context management, scores, etc..
+    such as polling, player and context management, scores, etc.
     """
+
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, context, logger_name: str):
         """
@@ -44,6 +45,11 @@ class EGameFactory:
         # players property
         self._players = {}  # index by id
         self._num_players = 0
+
+        # set in derived
+        self.game_name: str
+        self.game_description: str
+        self.wait_duration: int
 
         # state
         self.state = {
@@ -62,7 +68,7 @@ class EGameFactory:
             )
 
     def embed(self, text: str, **kwargs):
-        """Convenience method for creating `discord.Embed`s.
+        """Convenience method for creating `discord.Embed` instances.
 
         :param text: Text to insert in the `description` of the embed object.
 
@@ -123,7 +129,7 @@ class EGameFactory:
         """DM unique content to each player, indexed by player id.
 
         :param unique_content: Embed content to send to player, indexed by the
-        player id.
+            player id.
         :param ipipeline: Interaction pipeline
         :type ipipeline: :class:`interactive.InteractionPipeline`, Optional
 
@@ -191,11 +197,11 @@ class EGameFactory:
         response = await ipl.send_and_watch(self.channel, embed, timeout=16)
         return {k: v.author for (k, v) in response["response"]["reply"].items()}
 
-    async def announce_ranking(self, result: list):
+    async def announce_ranking(self, result: list[tuple[int, int]]):
         """Presents the ranking of scores in `results` in a discord embed in the
         public channel of the guild.
 
-        :param result: List of  `(num votes: int, pid: int)` tuples.
+        :param result: List of `vote` - `pid` pairs.
         """
         scoreboard = "Scores for this round:\n" + "\n".join(
             [f"{i[0]} votes for {self.players[i[1]]}" for i in result]
@@ -237,6 +243,7 @@ class EGameFactory:
 
     # override
     async def scrape(self, context) -> str:
+        # pylint: disable=unused-argument
         ...
 
     async def _scrape_channel(self, context, channel_name: str, file_name: str) -> int:
@@ -320,7 +327,7 @@ class EGameFactory:
         else:
             return True
 
-    def execute_rounds(max_rounds=0, prompt_continue=True):
+    def execute_rounds(max_rounds: int = 0, prompt_continue: bool = True):
         """
         Decorator method for games with multiple rounds, implementing optional checks at the end
         of each round as to whether player want to continue with same players, poll for new players
@@ -332,6 +339,7 @@ class EGameFactory:
             optional, defaults to 0
         :param prompt_continue: whether to prompt users to continue. optional, defaults to True
         """
+        # pylint: disable=no-self-argument
 
         def decorator(func):
             if max_rounds == 0 and not prompt_continue:

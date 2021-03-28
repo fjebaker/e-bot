@@ -1,8 +1,8 @@
 import logging
+import re
 
 from discord.ext import commands
 
-import re
 
 URI = "http://e-doritos.com/img/dorito.png"
 

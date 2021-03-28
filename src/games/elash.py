@@ -1,8 +1,8 @@
-from abstracts import EGameFactory
-
 import itertools
 import random
 import collections
+
+from abstracts import EGameFactory
 
 from utils.lookups import EMOJI_FORWARD
 from interactive import (
@@ -169,9 +169,7 @@ class ELash(EGameFactory):
             await self._modify_vote_board(response["message"], result)
 
             # tally scores
-            [
-                self._add_score(i[1], i[0]) for i in result
-            ]  # pylint: disable=expression-not-assigned
+            _ = [self._add_score(i[1], i[0]) for i in result]
 
         # print scoreboard
         await self.scoreboard()
@@ -205,7 +203,8 @@ class ELash(EGameFactory):
 
     async def vote_on(self, prompt: str, solutions: dict) -> dict:
         """TODO """
-        pids = [k for k in solutions.keys()]
+        # keep immutable copy
+        pids = list(solutions.keys())
         answers = [solutions[k] for k in pids]
 
         ipl = InteractionPipeline(

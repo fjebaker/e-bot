@@ -11,13 +11,11 @@ class DynamicLoad(commands.Cog):
         self.logging = logging.getLogger(__name__)
 
     def _reload_all_cogs(self) -> list:
-        # pylint: disable=unnecessary-comprehension
-
         self.logging.info("Reloading cogs...")
 
         _reloaded = []
         # local copy
-        cogs = [i for i in self.bot.extensions.keys()]
+        cogs = list(self.bot.extensions.keys())
         for cog in cogs:
             if cog == __name__:
                 # skip

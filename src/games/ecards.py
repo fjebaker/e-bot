@@ -1,7 +1,7 @@
 import asyncio
-from abstracts import EGameFactory
-
 import random
+
+from abstracts import EGameFactory
 
 from interactive import InteractionPipeline, ChoiceInteraction
 

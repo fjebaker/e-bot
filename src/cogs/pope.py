@@ -7,6 +7,7 @@ from discord.ext import commands
 
 from econfig import PATH_EXTENSION
 
+
 class PopeImage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

@@ -24,16 +24,17 @@ jobs:
       run: |
         pytest -vvv .
     
-    - name: Coverage report
-      run: |
-        echo "\`\`\`\nCoverage:\n" > cov.txt
-        pytest --cov=src . | sed "1,/coverage: /d" | sed "/^\=/d" >> cov.txt
-        echo "\`\`\`\\n" >> cov.txt
-
-    - name: Comment coverage
-      uses: machine-learning-apps/pr-comment@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        path: cov.txt
-      
+#    - name: Coverage report
+#      run: |
+#        echo "\`\`\`" > cov.txt
+#        echo "Coverage:" >> cov.txt
+#        pytest --cov=src . | sed "1,/coverage: /d" | sed "/^\=/d" >> cov.txt
+#        echo "\`\`\`\" >> cov.txt
+#
+#    - name: Comment coverage
+#      uses: machine-learning-apps/pr-comment@master
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      with:
+#        path: cov.txt
+     

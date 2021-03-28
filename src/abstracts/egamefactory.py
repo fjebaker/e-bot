@@ -1,20 +1,19 @@
 import logging
+import asyncio
+import os
+
+from functools import wraps
+from itertools import count
+from collections import defaultdict
 
 import discord
 
-import asyncio
-import os
-from collections import defaultdict
-
 from utils import dmerge
+from utils.lookups import EMOJI_FORWARD
 
 from interactive import InteractionPipeline, ChoiceInteraction, ReplyInteraction
 
 from econfig import PATH_EXTENSION
-
-from functools import wraps
-
-from itertools import count
 
 
 def replace_rules(content: str) -> str:
@@ -31,6 +30,8 @@ class EGameFactory:
     such as polling, player and context management, scores, etc.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, context, logger_name: str):
         """
         `logger_name` should just be `__name__` of instancing module. Used
@@ -44,6 +45,11 @@ class EGameFactory:
         # players property
         self._players = {}  # index by id
         self._num_players = 0
+
+        # set in derived
+        self.game_name: str
+        self.game_description: str
+        self.wait_duration: int
 
         # state
         self.state = {
@@ -237,6 +243,7 @@ class EGameFactory:
 
     # override
     async def scrape(self, context) -> str:
+        # pylint: disable=unused-argument
         ...
 
     async def _scrape_channel(self, context, channel_name: str, file_name: str) -> int:
@@ -332,6 +339,7 @@ class EGameFactory:
             optional, defaults to 0
         :param prompt_continue: whether to prompt users to continue. optional, defaults to True
         """
+        # pylint: disable=no-self-argument
 
         def decorator(func):
             if max_rounds == 0 and not prompt_continue:

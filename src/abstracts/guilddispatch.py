@@ -33,8 +33,8 @@ class GuildDispatch(commands.Cog):
         self.logging = logging.getLogger(logger_name)
 
         # set these in derived
-        # self.cog_help = ""
-        # self.has_scrape = False
+        self.cog_help: str
+        self.has_scrape = False
 
         # class internals
         self.lookup = {}  # lookup game states by guild id
@@ -133,6 +133,7 @@ class GuildDispatch(commands.Cog):
         await context.send(embed=self.embed("Unknown command."))
 
     async def cog_command_error(self, context, error):
+        # pylint: disable=arguments-differ
         if isinstance(error, commands.errors.MissingRequiredArgument):
             await context.send(f"Missing Argument!\n{self.cog_help}")
         else:

@@ -10,6 +10,7 @@ class ReplyInteraction(Monitor):
 
     def __init__(self):
         self.logging = logging.getLogger(__name__ + ":" + self.__class__.__name__)
+        self.replies = []
 
     def reset(self):
         self.replies = []
@@ -20,6 +21,7 @@ class ReplyInteraction(Monitor):
         return embed
 
     async def monitor(self, original, message) -> dict:
+        # pylint: disable=arguments-differ
         if (
             message.reference
             and message.reference.resolved.id == original.id

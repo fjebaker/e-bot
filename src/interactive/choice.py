@@ -3,6 +3,7 @@ import logging
 from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
 from interactive.monitor import Monitor
 
+
 class ChoiceInteraction(Monitor):
     name = "choice"
 
@@ -11,7 +12,6 @@ class ChoiceInteraction(Monitor):
         self.emojis = [EMOJI_FORWARD[i] for i in range(1, len(choices) + 1)]
         self.choices = choices
         self.max_votes = max_votes
-
 
     def set_emojis(self, emojis: list) -> "ChoiceInteraction":
         """Set the emojis to present in the choice.

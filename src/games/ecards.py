@@ -28,8 +28,6 @@ class ECards(EGameFactory):
         .e ecards start - start playing a game in the current channel
         .e ecards stop - stop playing the active game
     """
-    has_scrape = True
-
     file_prompts = "data/elash_prompts_{gid}.txt"
     file_safeties = "data/elash_safeties_{gid}.txt"
 
@@ -43,6 +41,8 @@ class ECards(EGameFactory):
         self.prompts = None
         # instance property of all safety "cards"
         self.safeties = None
+        # declares that this game is capable of scraping channels for prompts/answers
+        self.has_scrape = True
 
     async def start(self):
         """

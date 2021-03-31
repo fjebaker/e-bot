@@ -5,7 +5,11 @@ name: linter
 
 on:
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+    paths:
+      - '**.py'
+      - 'setup.cfg'
 
 jobs:
   linting:

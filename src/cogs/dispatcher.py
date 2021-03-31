@@ -32,3 +32,4 @@ class EGameDispatch(GuildDispatch):
 
 def setup(bot):
     bot.add_cog(EGameDispatch(bot))
+    bot.logging.exception("test")

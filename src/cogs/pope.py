@@ -13,7 +13,7 @@ class PopeImage(commands.Cog):
         self.bot = bot
         self.logging = logging.getLogger(__name__)
 
-        self.pope_uris: list[str]
+        self.pope_uris = []
 
         with open(os.path.join(PATH_EXTENSION, "data/popelist.txt"), "r") as f:
             self.pope_uris = list(filter(lambda i: i != "", f.read().split("\n")))

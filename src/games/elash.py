@@ -39,7 +39,6 @@ class ELash(EGameFactory):
     wait_duration = 5
     min_players = 2
     cog_help = "TODO"
-    has_scrape = True
 
     file_prompts = "data/elash_prompts_{gid}.txt"
     file_safeties = "data/elash_safeties_{gid}.txt"
@@ -52,6 +51,7 @@ class ELash(EGameFactory):
 
         self.prompts = None
         self.safeties = None
+        self.has_scrape = True
 
     async def start(self):
         """Main entry"""

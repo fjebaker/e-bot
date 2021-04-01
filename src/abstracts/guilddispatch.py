@@ -1,7 +1,13 @@
 import logging
+import asyncio
+from collections import namedtuple
+from typing import Callable
 
 import discord
 from discord.ext import commands
+
+# data type for storing factories
+FactoryTask = namedtuple("FactoryTask", ("instance", "future"))
 
 
 class GuildDispatch(commands.Cog):
@@ -34,7 +40,6 @@ class GuildDispatch(commands.Cog):
 
         # set these in derived
         self.cog_help: str
-        self.has_scrape = False
 
         # class internals
         self.lookup = {}  # lookup game states by guild id
@@ -45,50 +50,90 @@ class GuildDispatch(commands.Cog):
             title="Dispatch Cog", description=text, colour=discord.Colour.red()
         )
 
-    async def _stop(self, gid: int):
+    def _stop(self, gid: int) -> str:
         """Stops the game instance running on the guild with id `gid`, and removes
         the instance in the lookup dictionary (so that it is GC'd).
 
         :param gid: Guild ID
+
+        :return: Info string
         """
         self.logging.info(f"Stopping {self.lookup[gid]} for {gid}.")
 
-        await self.lookup[gid].stop()
-        self.lookup.pop(gid)
+        ft = self.lookup[gid]
 
-    async def _make_instance(self, context, factory):
+        if ft.future.cancel():
+            # successfully cancelled; game removes itseld
+            ...
+        else:
+            self.logging.warning(f"Failed to stop {ft}")
+            return "Error stopping game."
+
+        assert gid not in self.lookup  # sanity check
+
+        return "Game succesfully stopped"
+
+    def _make_instance(self, context, factory):
         """Start a new game instance for the current context. That is to say, will
         create a `factory` instance and store it in `self.lookup[gid]`, where `gid`
         is the guild id of `context`.
 
         :param context: Discord context.
         :type context: `discord.ext.commands.Context`
+
+        :return: Instance of the factory
         """
         gid = context.guild.id
 
         self.logging.info(f"Starting {factory} instance for {gid}.")
 
-        # create and store instance
-        self.lookup[gid] = factory(context)
+        # create and return instance
+        return factory(context)
 
-    async def _start(self, gid: int, ret_channel, factory):
+    def _launch_threadsafe(self, instance) -> FactoryTask:
+        """Run the `start` method of `instance` in a thread using `asyncio.run_coroutine_threadsafe`.
+
+        :return: `FactoryTask` of `instance` and `future`, where the future contains the running threadsafe
+            event loop.
+        """
+        loop = asyncio.get_event_loop()
+        future = asyncio.run_coroutine_threadsafe(instance.start(), loop)
+
+        return FactoryTask(instance, future)
+
+    async def _start(self, context, factory):
         """Obtains the factory instance from `self.lookup` of Guild ID `gid`, and calls
         :func:`abstracts.egamefactory.EGameFactory.gather_players`.
         If `factory.min_players` is met, calls :func:`abstracts.egame.EGame.start`.
         """
-        instance = self.lookup[gid]
+        gid = context.guild.id
 
         # gather players
+        instance = factory(context)
         player_count = await instance.gather_players()
 
-        if player_count < factory.min_players:
-            return await ret_channel.send(
+        if player_count < instance.min_players:
+            await context.channel.send(
                 embed=self.embed(
                     f"Too few players to start game. Requires at least {factory.min_players}."
                 )
             )
+            return
         else:
-            return await instance.start()
+            ft = self._launch_threadsafe(instance)
+            ft.future.add_done_callback(
+                self._remove_on_done(gid)
+            )  # set to auto remove from `self.lookup` on completion
+
+            # store in lookup
+            self.lookup[gid] = ft
+
+            self.logging.info(f"Started {factory} on {gid}")
+            return
+
+    def _remove_on_done(self, gid: int) -> Callable:
+        """ Remove object associated with `gid` from `self.lookup` if associated future is done. """
+        return lambda future: self.lookup.pop(gid) if gid in self.lookup else None
 
     async def _entry(self, context, cmd: str, factory):
         """Cog command entry function, to be called from the derived class. Handles command
@@ -98,30 +143,35 @@ class GuildDispatch(commands.Cog):
             f"entry called for {factory} with {cmd} from guild {context.guild.name}"
         )
 
-        # check if state for guild exists
-        if context.guild.id not in self.lookup:
+        gid = context.guild.id
 
-            # info catches
-            if cmd == "stop":
+        if cmd == "stop":
+            if gid in self.lookup:
+                # stop game
+                self._stop(gid)
+                return await context.send(embed=self.embed("Stopped running game."))
+            else:
                 return await context.send(embed=self.embed("No game running."))
 
+        elif cmd == "start":
+            if gid in self.lookup:
+                return await context.send(
+                    embed=self.embed("A game is already running on this server.")
+                )
+
             else:
-                # start an instance
-                await self._make_instance(context, factory)
-
-        # restarting
-        if cmd == "start":
-            return await self._start(context.guild.id, context.channel, factory)
-
-        # stops must be handled externally
-        elif cmd == "stop":
-            await self._stop(context.guild.id)
-            return await context.send(embed=self.embed(f"Stopped {factory.game_name}."))
+                # start game
+                return await self._start(context, factory)
 
         elif cmd == "scrape":
+            if factory.has_scrape:
+                # good to scrape
+                if gid in self.lookup:
+                    instance = self.lookup[gid].instance
+                else:
+                    instance = factory(context)
 
-            if self.has_scrape:
-                status = await self.lookup[context.guild.id].scrape(context)
+                status = await instance.scrape(context)
                 return await context.send(embed=self.embed(status))
 
             else:
@@ -129,8 +179,9 @@ class GuildDispatch(commands.Cog):
                     embed=self.embed("Does not require scraping.")
                 )
 
-        # catch all
-        await context.send(embed=self.embed("Unknown command."))
+        else:
+            # catch all
+            await context.send(embed=self.embed("Unknown command."))
 
     async def cog_command_error(self, context, error):
         # pylint: disable=arguments-differ

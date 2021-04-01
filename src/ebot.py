@@ -25,6 +25,15 @@ class EBot(commands.Bot):
             except Exception as e:
                 self.logging.error(f"{name} failed to load: raised exception: {e}")
 
+    def log_infos(self):
+        """Write information about the bot to logs.
+
+        Currently logs:
+            - connected guild name and guild id
+        """
+        for g in self.guilds:
+            self.logging.info(f"Active on guild {g} (id={g.id})")
+
     async def on_ready(self):
         """ TODO """
         await self.wait_until_ready()
@@ -34,6 +43,8 @@ class EBot(commands.Bot):
                 name="you. \U0001F441\U0001F444\U0001F441",
             )
         )
+
+        self.log_infos()
 
     async def on_command_error(self, context, error):
         """ TODO """

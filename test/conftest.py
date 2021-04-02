@@ -6,7 +6,7 @@ import sys
 
 from typing import Callable
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
@@ -48,6 +48,16 @@ def tmp_file() -> Callable[[str], str]:
         return p
 
     return _builder
+
+
+@pytest.fixture(scope="session")
+def no_sleep() -> AsyncMock:
+    """ Patches out common sleep functions """
+    patcher = patch("asyncio.sleep")
+    mock = patcher.start()
+
+    yield mock
+    patcher.stop()
 
 
 def pytest_sessionfinish(session, exitstatus):

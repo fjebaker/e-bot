@@ -1,6 +1,7 @@
 import asyncio
 from typing import Callable, Union
 
+
 class Clock:
     """Mini Blocking Clock class for some sense of timing in the game. Calls
     `condition` at every `rate` seconds, with remaining time in `int` as
@@ -27,7 +28,13 @@ class Clock:
     :type default_return: function, optional
     """
 
-    def __init__(self, duration: int, condition: Callable=None, rate: Union[int, float]=1, default_return=None):
+    def __init__(
+        self,
+        duration: int,
+        condition: Callable = None,
+        rate: Union[int, float] = 1,
+        default_return=None,
+    ):
         assert duration > 0
         assert rate <= duration
 

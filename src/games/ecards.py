@@ -132,11 +132,8 @@ class ECards(EGameFactory):
         :param hands: the players' hands
         """
         # announce new round
-        await self.channel.send(
-            embed=self.embed(
-                f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: **{prompt}**"
-            )
-        )
+        em_text = f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: \n**{prompt}**"
+        message = await self.channel.send(embed=self.embed(em_text))
 
         # immutable pids
         pids = list(self.players.keys())
@@ -147,7 +144,7 @@ class ECards(EGameFactory):
                 f"This round's prompt: {prompt}\nYou're the leader for this round - sit back and relax!"
             )
             if pid == leader
-            else self.embed(f"This round's prompt: {prompt}")
+            else self.embed(f"**{prompt}**")
             for pid in pids
         }
 
@@ -212,21 +209,25 @@ class ECards(EGameFactory):
 
         if len(shuffled_responses) == 0:
             # No-one played a card - skip the round
-            return await self.channel.send(
+            await message.edit(
                 embed=self.embed(
-                    "No-one played a card. Are the players even there? Skipping this round..."
+                    em_text
+                    + "\n\nNo-one played a card. Are the players even there? Skipping this round..."
                 )
             )
+            return
+
         elif len(shuffled_responses) == 1:
             # Only one person played a card - award them the victory
             winning_card = shuffled_responses[0]
             winning_pid = dict_reverse_lookup(cards_played, winning_card)
             if winning_pid:
 
-                # message channel with round result
-                await self.channel.send(
+                # update message channel with round result
+                await message.edit(
                     embed=self.embed(
-                        f"Only {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default. Is everyone else even there?"
+                        em_text
+                        + f"\n\nOnly {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default."
                     )
                 )
 
@@ -239,15 +240,16 @@ class ECards(EGameFactory):
                 return
         else:
             # Enough responses for a proper vote
-            end_str = "\n".join(shuffled_responses)
-            await self.channel.send(
-                embed=self.embed(
-                    f"This round's answers:\n{end_str}\nAwaiting choice of a winner from {self.players[leader]}"
-                )
+            end_str = "\n".join((f"- {i}" for i in shuffled_responses))
+
+            em_text = (
+                em_text
+                + f"\n\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
             )
+            await message.edit(embed=self.embed(em_text))
 
             # little pause
-            asyncio.sleep(self.wait_duration)
+            await asyncio.sleep(self.wait_duration)
 
             # dm the leader to choose
             leader_ipl = InteractionPipeline(
@@ -277,9 +279,10 @@ class ECards(EGameFactory):
                 asyncio.sleep(self.wait_duration)
 
                 # message channel with round result
-                await self.channel.send(
+                await message.edit(
                     embed=self.embed(
-                        f"The winning answer:\n{winning_card} (answer from {self.players[winning_pid]})"
+                        em_text
+                        + f"\n\nThe winning answer:\n**{winning_card}**\n(answer from {self.players[winning_pid]})"
                     )
                 )
 
@@ -289,11 +292,13 @@ class ECards(EGameFactory):
             else:
                 # update scoreboard
                 self._add_score(leader, -1)
-                return await self.channel.send(
+                await message.edit(
                     embed=self.embed(
-                        f"No winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
+                        em_text
+                        + f"\n\nNo winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
                     )
                 )
+                return
 
     async def scrape(self, context) -> str:
         """TODO"""

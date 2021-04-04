@@ -133,7 +133,17 @@ class GuildDispatch(commands.Cog):
 
     def _remove_on_done(self, gid: int) -> Callable:
         """ Remove object associated with `gid` from `self.lookup` if associated future is done. """
-        return lambda future: self.lookup.pop(gid) if gid in self.lookup else None
+
+        def _callback(future):
+            # check for exceptions
+            e = future.exception()
+            if e:
+                self.logging.exception("Exception in Game", exc_info=e)
+
+            # remove self from lookup
+            _ = self.lookup.pop(gid) if gid in self.lookup else None
+
+        return _callback
 
     async def _entry(self, context, cmd: str, factory):
         """Cog command entry function, to be called from the derived class. Handles command

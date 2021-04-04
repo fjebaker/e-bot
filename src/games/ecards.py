@@ -87,7 +87,6 @@ class ECards(EGameFactory):
 
     @EGameFactory.execute_rounds(max_rounds=0, prompt_continue=True)
     async def execute_rotation(self, prompt_deck: list, answer_deck: list, hands: dict):
-
         """
         Runs a round for each player
         """
@@ -102,7 +101,7 @@ class ECards(EGameFactory):
             )
             await self.execute_round(pid, prompt_deck.pop(), hands)
             ECards.refill_hands(hands, answer_deck)
-            asyncio.sleep(self.wait_duration)
+            await asyncio.sleep(self.wait_duration)
         return await self.scoreboard()
 
     @staticmethod
@@ -205,7 +204,7 @@ class ECards(EGameFactory):
         shuffled_responses = list(cards_played.values())
         random.shuffle(shuffled_responses)
 
-        asyncio.sleep(self.wait_duration)
+        await asyncio.sleep(self.wait_duration)
 
         if len(shuffled_responses) == 0:
             # No-one played a card - skip the round
@@ -276,7 +275,7 @@ class ECards(EGameFactory):
             if winning_pid:
 
                 # little pause
-                asyncio.sleep(self.wait_duration)
+                await asyncio.sleep(self.wait_duration)
 
                 # message channel with round result
                 await message.edit(

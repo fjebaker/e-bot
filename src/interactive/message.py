@@ -21,7 +21,7 @@ class MessageInteraction(Monitor):
         # pylint: disable=arguments-differ
 
         self.logging.info(
-            f"Reply to {original.id}: {message.author}: {message.content}"
+            f"Message to {original.id}: {message.author}: {message.content}"
         )
 
         await message.add_reaction(EMOJI_FORWARD["checkmark"])

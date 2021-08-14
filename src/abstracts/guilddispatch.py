@@ -132,7 +132,7 @@ class GuildDispatch(commands.Cog):
             return
 
     def _remove_on_done(self, gid: int) -> Callable:
-        """ Remove object associated with `gid` from `self.lookup` if associated future is done. """
+        """Remove object associated with `gid` from `self.lookup` if associated future is done."""
 
         def _callback(future):
             # check for exceptions
@@ -194,7 +194,7 @@ class GuildDispatch(commands.Cog):
             await context.send(embed=self.embed("Unknown command."))
 
     async def cog_command_error(self, context, error):
-        # pylint: disable=arguments-differ
+        # pylint: disable=arguments-renamed
         if isinstance(error, commands.errors.MissingRequiredArgument):
             await context.send(f"Missing Argument!\n{self.cog_help}")
         else:

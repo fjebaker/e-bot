@@ -77,7 +77,7 @@ class DynamicLoad(commands.Cog):
             await context.send(resp)
 
     async def cog_command_error(self, context, error):
-        # pylint: disable=arguments-differ
+        # pylint: disable=arguments-renamed
         if isinstance(error, commands.errors.MissingRequiredArgument):
             await context.send(f"Missing Argument!\n{COG_HELP}")
         else:

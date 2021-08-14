@@ -8,14 +8,14 @@ import cogs
 
 
 class EBot(commands.Bot):
-    """ TODO """
+    """TODO"""
 
     def __init__(self):
         super().__init__(command_prefix=".e ", activity=discord.Game(name="Loading..."))
         self.logging = logging.getLogger(__name__)
 
     def load_all_available_cogs(self):
-        """ TODO """
+        """TODO"""
         self.logging.info("Loading cogs...")
         for i in pkgutil.walk_packages(cogs.__path__, cogs.__name__ + "."):
             name = i.name
@@ -35,7 +35,7 @@ class EBot(commands.Bot):
             self.logging.info(f"Active on guild {g} (id={g.id})")
 
     async def on_ready(self):
-        """ TODO """
+        """TODO"""
         await self.wait_until_ready()
         await self.change_presence(
             activity=discord.Activity(
@@ -47,8 +47,8 @@ class EBot(commands.Bot):
         self.log_infos()
 
     async def on_command_error(self, context, error):
-        """ TODO """
-        # pylint: disable=arguments-differ
+        """TODO"""
+        # pylint: disable=arguments-renamed
         if isinstance(error, commands.CommandNotFound):
             self.logging.info(f"Call to unknown command {error}")
             await context.send(error)

@@ -49,6 +49,7 @@ def _new_deck() -> Generator[Card, None, None]:
     random.shuffle(cards)
     return (i for i in cards)
 
+
 class FrenchDeck:
     def __init__(self):
         self._deck = _new_deck()

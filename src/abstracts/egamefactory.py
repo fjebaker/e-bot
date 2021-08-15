@@ -67,7 +67,7 @@ class EGameFactory:
                 ),
             )
 
-    def embed(self, text: str, **kwargs):
+    def embed(self, text: str, colour:discord.Colour=discord.Colour.blue(), **kwargs):
         """Convenience method for creating `discord.Embed` instances.
 
         :param text: Text to insert in the `description` of the embed object.
@@ -78,7 +78,7 @@ class EGameFactory:
         return discord.Embed(
             title=self.game_name,
             description=text,
-            colour=discord.Colour.blue(),
+            colour=colour,
             **kwargs,
         )
 

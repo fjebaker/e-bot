@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 import discord
 
@@ -18,14 +19,24 @@ class InteractionPipeline:
 
         self.logging.info(f"instanced with {str(actions)}")
 
-    async def send_and_watch(self, channel, embed: discord.Embed, timeout=16) -> dict:
+    async def send_and_watch(
+        self,
+        channel,
+        embed: discord.Embed,
+        timeout: int = 16,
+        edit_message: Union[None, discord.Message] = None,
+    ) -> dict:
         # apply formats to embed and reset pipeline state
         for p in self.pipeline:
             p.reset()
             embed = p.format(embed)
 
-        # send message
-        message = await channel.send(embed=embed)
+        # send or edit message message
+        if edit_message:
+            message = edit_message
+            await message.edit(embed=embed)
+        else:
+            message = await channel.send(embed=embed)
 
         # apply post formatting (emojis, etc)
         for p in self.pipeline:

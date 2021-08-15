@@ -63,13 +63,11 @@ class GuildDispatch(commands.Cog):
         ft = self.lookup[gid]
 
         if ft.future.cancel():
-            # successfully cancelled; game removes itseld
+            # successfully cancelled; game removes itself
             ...
         else:
             self.logging.warning(f"Failed to stop {ft}")
             return "Error stopping game."
-
-        assert gid not in self.lookup  # sanity check
 
         return "Game succesfully stopped"
 

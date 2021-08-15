@@ -4,6 +4,8 @@ from collections import defaultdict, namedtuple
 import itertools
 from typing import Callable, List, Union
 
+import discord
+
 from abstracts import EGameFactory
 
 from utils.frenchdeck import FrenchDeck, Card
@@ -84,8 +86,7 @@ class CardPyramid:
     def sparse(self) -> str:
         """Sparse string of the pyramid"""
         rep = [
-            "." * (self.base - i)
-            for i in reversed(range(self.current_row, self.base))
+            "." * (self.base - i) for i in reversed(range(self.current_row, self.base))
         ]
 
         num = self._current_pos
@@ -102,7 +103,6 @@ class CardPyramid:
         self._current_pos = 0
         self.current_row = 1
         for c in itertools.chain(*self._cards):
-            self.advance()
             yield c
 
 
@@ -111,7 +111,7 @@ class RideTheBus(EGameFactory):
     # configuration
     game_name = "Ride the Bus"
     game_description = "Drink."
-    wait_duration = 7
+    wait_duration = 2
     min_players = 1
     cog_help = "TODO"
 
@@ -159,14 +159,28 @@ class RideTheBus(EGameFactory):
         for card in pyramid:
             # clear the players hand
             self.hands[br_pid] = []
-            for question in self._questions:
+
+            # want to edit the same message for the array of questions
+            message = await self.channel.send(embed=self.embed(get_msg_body()))
+
+            for i, question in enumerate(self._questions):
                 await self._handle_question(
                     br_pid,
                     question,
                     card,
                     modifier=pyramid.current_row,
                     prompt_prefix=get_msg_body(),
+                    edit_message=message,
                 )
+                # update card for next question
+                card = self.deck.deal()
+                # sleep
+                await asyncio.sleep(self.wait_duration)
+
+                # only advance on first question
+                if i == 0:
+                    self.logging.info("Advancing pyramid...")
+                    pyramid.advance()
 
         await self.channel.send(
             embed=self.embed(
@@ -267,14 +281,17 @@ class RideTheBus(EGameFactory):
                 card = self.deck.deal()
                 # handle question
                 await self._handle_question(pid, question, card)
+                # sleep
+                await asyncio.sleep(self.wait_duration)
 
     async def _handle_question(
         self,
         pid: int,
         question: RideTheBusQuestion,
         card: Card,
-        modifier=1,
-        prompt_prefix="",
+        modifier: int = 1,
+        prompt_prefix: str = "",
+        edit_message: Union[None, discord.Message] = None,
     ):
         # pylint: disable=too-many-arguments
         self.logging.info(
@@ -288,6 +305,7 @@ class RideTheBus(EGameFactory):
         response = await ipl.send_and_watch(
             self.channel,
             self.embed(prompt + self._hand_to_string(pid, prefix="Your hand:\n")),
+            edit_message=edit_message,
         )
 
         self.logging.info("Response: %s", response)
@@ -310,9 +328,6 @@ class RideTheBus(EGameFactory):
         # update message with result
         await response["message"].edit(embed=self.embed(result))
 
-        # sleep
-        await asyncio.sleep(self.wait_duration)
-
     @property
     def _red_or_black(self) -> RideTheBusQuestion:
         return RideTheBusQuestion(
@@ -330,8 +345,8 @@ class RideTheBus(EGameFactory):
             choices=["higher", "lower"],
             prompt="**Higher** or **Lower**?",
             handle=self._make_handler(
-                lambda hand, answer, card: (answer == "lower" and card < hand[-1])
-                or (answer == "higher" and card >= hand[-1])
+                lambda hand, answer, card: (answer == "higher" and card >= hand[-1])
+                or (answer == "lower" and card < hand[-1])
             ),
         )
 
@@ -362,11 +377,15 @@ class RideTheBus(EGameFactory):
         )
 
     def _make_handler(
-        self, func: Callable[[str, Card], bool]
+        self, func: Callable[[List[Card], str, Card], bool]
     ) -> Callable[[int, str, Card], str]:
         def handler(pid: int, answer: str, card: Card, amount=1) -> str:
 
             hand = self.hands[pid]
+            self.logging.info("pid %d gave answer '%s'", pid, answer)
+            if hand:
+                self.logging.info("card < hand[-1] %s", card < hand[-1])
+                self.logging.info("card > hand[-1] %s", card > hand[-1])
 
             # check outcome
             if func(hand, answer, card):
@@ -375,6 +394,8 @@ class RideTheBus(EGameFactory):
                 ret = f"You are Incorrect! **Drink {amount} sip{'s' if amount > 1 else ''}!**"
             else:
                 ret = f"You didn't provide a suitable answer. **Drink {amount} sip{'s' if amount > 1 else ''}!**"
+
+            self.logging.info("Returning string '%s'", ret)
 
             # add card to hand
             self.hands[pid].append(card)

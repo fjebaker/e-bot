@@ -4,8 +4,8 @@ Helper class for standard 52 french deck playing cards.
 import itertools
 import functools
 import random
-from collections import namedtuple
-from typing import Generator, Union
+from dataclasses import dataclass
+from typing import Generator, List, Union
 
 CARD_VALUES = range(0, 14)
 CARD_SUITS = ["D", "H", "C", "S"]
@@ -25,18 +25,36 @@ CARD_SUIT_EMOJIS = {
 }
 
 
-# pretty print
-def _card_pprint(self) -> str:
-    return BLANK_CARD.format(CARD_VALUE_STRING[self.value], CARD_SUIT_EMOJIS[self.suit])
-
-
 # typedef
-Card = namedtuple("Card", ["suit", "value", "is_black"])
-Card.__str__ = _card_pprint
-Card.__lt__ = lambda self, other: self.value < other.value
-Card.__gt__ = lambda self, other: self.value > other.value
-Card.__eq__ = lambda self, other: self.value == other.value
-Card.is_inbetween = lambda self, others: sorted([self, *others])[1] == self
+@dataclass
+class Card:
+    suit: str
+    value: int
+    is_black: bool
+
+    def __str__(self) -> str:
+        return BLANK_CARD.format(
+            CARD_VALUE_STRING[self.value], CARD_SUIT_EMOJIS[self.suit]
+        )
+
+    def __lt__(self, other: "Card") -> bool:
+        return self.value < other.value
+
+    def __le__(self, other: "Card") -> bool:
+        return self < other or self == other
+
+    def __gt__(self, other: "Card") -> bool:
+        return self.value > other.value
+
+    def __ge__(self, other: "Card") -> bool:
+        return self > other or self == other
+
+    def __eq__(self, other: "Card") -> bool:
+        return self.value == other.value
+
+    def is_inbetween(self, others: List["Card"]) -> bool:
+        s = sorted([self, *others])
+        return self < s[-1] and s[1] == self
 
 
 def _new_deck() -> Generator[Card, None, None]:

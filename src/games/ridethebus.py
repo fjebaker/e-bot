@@ -2,7 +2,7 @@ import asyncio
 
 from collections import defaultdict, namedtuple
 import itertools
-from typing import Callable, List, Union
+from typing import Callable, List, Union, Tuple
 
 import discord
 
@@ -111,7 +111,7 @@ class RideTheBus(EGameFactory):
     # configuration
     game_name = "Ride the Bus"
     game_description = "Drink."
-    wait_duration = 2
+    wait_duration = 7
     min_players = 1
     cog_help = "TODO"
 
@@ -316,7 +316,7 @@ class RideTheBus(EGameFactory):
             answer = ""
 
         # get result of question
-        outcome = question.handle(pid, answer, card, amount=1 * modifier)
+        colour, outcome = question.handle(pid, answer, card, amount=1 * modifier)
 
         # assemble modification to prompt
         result = (
@@ -326,7 +326,7 @@ class RideTheBus(EGameFactory):
         )
 
         # update message with result
-        await response["message"].edit(embed=self.embed(result))
+        await response["message"].edit(embed=self.embed(result, colour=colour))
 
     @property
     def _red_or_black(self) -> RideTheBusQuestion:
@@ -379,7 +379,9 @@ class RideTheBus(EGameFactory):
     def _make_handler(
         self, func: Callable[[List[Card], str, Card], bool]
     ) -> Callable[[int, str, Card], str]:
-        def handler(pid: int, answer: str, card: Card, amount=1) -> str:
+        def handler(
+            pid: int, answer: str, card: Card, amount=1
+        ) -> Tuple[discord.Colour, str]:
 
             hand = self.hands[pid]
             self.logging.info("pid %d gave answer '%s'", pid, answer)
@@ -389,13 +391,22 @@ class RideTheBus(EGameFactory):
 
             # check outcome
             if func(hand, answer, card):
-                ret = f"You are Correct! **Hand out {amount} drink{'s' if amount > 1 else ''}.**"
+                ret = (
+                    discord.Colour.green(),
+                    f"You are Correct! **Hand out {amount} drink{'s' if amount > 1 else ''}.**",
+                )
             elif answer:
-                ret = f"You are Incorrect! **Drink {amount} sip{'s' if amount > 1 else ''}!**"
+                ret = (
+                    discord.Colour.red(),
+                    f"You are Incorrect! **Drink {amount} sip{'s' if amount > 1 else ''}!**",
+                )
             else:
-                ret = f"You didn't provide a suitable answer. **Drink {amount} sip{'s' if amount > 1 else ''}!**"
+                ret = (
+                    discord.Colour.red(),
+                    f"You didn't provide a suitable answer. **Drink {amount} sip{'s' if amount > 1 else ''}!**",
+                )
 
-            self.logging.info("Returning string '%s'", ret)
+            self.logging.info("Returning string '%s'", ret[1])
 
             # add card to hand
             self.hands[pid].append(card)

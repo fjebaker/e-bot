@@ -30,7 +30,7 @@ class VideoThanks(commands.Cog):
         self.logging = logging.getLogger(__name__)
 
     def _has_video(self, content):
-        """ returns True if message has a YouTube url """
+        """returns True if message has a YouTube url"""
         return re.search(r"www\.youtube\.com", content) is not None
 
     @commands.Cog.listener()

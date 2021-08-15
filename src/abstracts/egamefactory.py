@@ -13,7 +13,7 @@ from utils.lookups import EMOJI_FORWARD
 
 from interactive import InteractionPipeline, ChoiceInteraction, ReplyInteraction
 
-from econfig import PATH_EXTENSION
+from econfig import PATH_EXTENSION, PLAYER_GATHER_TIMEOUT
 
 
 def replace_rules(content: str) -> str:
@@ -67,7 +67,9 @@ class EGameFactory:
                 ),
             )
 
-    def embed(self, text: str, **kwargs):
+    def embed(
+        self, text: str, colour: discord.Colour = discord.Colour.blue(), **kwargs
+    ):
         """Convenience method for creating `discord.Embed` instances.
 
         :param text: Text to insert in the `description` of the embed object.
@@ -78,7 +80,7 @@ class EGameFactory:
         return discord.Embed(
             title=self.game_name,
             description=text,
-            colour=discord.Colour.blue(),
+            colour=colour,
             **kwargs,
         )
 
@@ -194,7 +196,9 @@ class EGameFactory:
         # create reply reaction pipeline
         ipl = InteractionPipeline(ReplyInteraction())
 
-        response = await ipl.send_and_watch(self.channel, embed, timeout=16)
+        response = await ipl.send_and_watch(
+            self.channel, embed, timeout=PLAYER_GATHER_TIMEOUT
+        )
         return {k: v.author for (k, v) in response["response"]["reply"].items()}
 
     async def announce_ranking(self, result: list):

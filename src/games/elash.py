@@ -202,7 +202,7 @@ class ELash(EGameFactory):
         return outgoing
 
     async def vote_on(self, prompt: str, solutions: dict) -> dict:
-        """TODO """
+        """TODO"""
         # keep immutable copy
         pids = list(solutions.keys())
         answers = [solutions[k] for k in pids]

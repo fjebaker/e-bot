@@ -15,12 +15,12 @@ discord = "*"
 black = "*"
 flake8 = "*"
 pylint = "*"
-sphinx = "*"
 pytest = "*"
 pytest-socket = "*"
 pytest-asyncio = "*"
 pytest-cov = "*"
 coverage = "*"
+Sphinx = "*"
 
 [requires]
 python_version = "3.9"

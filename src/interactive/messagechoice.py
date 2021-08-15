@@ -24,12 +24,12 @@ class MessageChoiceInteraction(Monitor):
         return embed
 
     async def monitor(self, original, message) -> dict:
-        # pylint: disable=arguments-differ
+        # pylint: disable=arguments-differ,unused-argument
 
         if message.author.id == self.target_pid:
-            self.logging.info(
-                f"Message to {original.id}: {message.author}: {message.content}"
-            )
+            # self.logging.info(
+            #    f"Message to {original.id}: {message.author}: {message.content}"
+            # )
 
             # ensure content is one of the available choices
             matches = re.findall(self.re_choices, message.content)

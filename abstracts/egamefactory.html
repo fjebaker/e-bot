@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>EGameFactory &#8212; ebot  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Welcome to ebot’s documentation!" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="egamefactory">
+<h1><cite>EGameFactory</cite><a class="headerlink" href="#egamefactory" title="Permalink to this headline">¶</a></h1>
+<p>This class defines the <cite>EGameFactory</cite> super-class, used to define new interactive
+game components. <a class="reference internal" href="#abstracts.EGameFactory" title="abstracts.EGameFactory"><code class="xref py py-class docutils literal notranslate"><span class="pre">abstracts.EGameFactory</span></code></a> defines a number of attributes,
+which should be defined by the subclasses.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="abstracts.EGameFactory">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">abstracts.</span></span><span class="sig-name descname"><span class="pre">EGameFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#abstracts.EGameFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>E Game Factory Superclass</p>
+<p>To be inherited by subclassing game cogs, providing basic interaction
+such as polling, player and context management, scores, etc.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.game_name">
+<span class="sig-name descname"><span class="pre">game_name</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#abstracts.EGameFactory.game_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The game name (set by subclass).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.game_description">
+<span class="sig-name descname"><span class="pre">game_description</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#abstracts.EGameFactory.game_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>A short description of the game (set by subclass).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.wait_duration">
+<span class="sig-name descname"><span class="pre">wait_duration</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#abstracts.EGameFactory.wait_duration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Duration called by <code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.sleep()</span></code> to pace the game (set by subclass).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.min_players">
+<span class="sig-name descname"><span class="pre">min_players</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#abstracts.EGameFactory.min_players" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum number of players required to play the game (set by subclass).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.cog_help">
+<span class="sig-name descname"><span class="pre">cog_help</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#abstracts.EGameFactory.cog_help" title="Permalink to this definition">¶</a></dt>
+<dd><p>A help string present to document the available cog commands.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.has_scrape">
+<span class="sig-name descname"><span class="pre">has_scrape</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span></em><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#abstracts.EGameFactory.has_scrape" title="Permalink to this definition">¶</a></dt>
+<dd><p>A short description of the game (set by subclass).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.EGameFactory.execute_rounds">
+<span class="sig-prename descclassname"><span class="pre">&#64;</span></span><span class="sig-name descname"><span class="pre">execute_rounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_rounds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt_continue</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#abstracts.EGameFactory.EGameFactory.execute_rounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator method for games with multiple rounds, implementing optional checks at the end
+of each round as to whether player want to continue with same players, poll for new players
+or stop playing completely.
+Note that this will throw an error if max_rounds is set to 0 and prompt_continue is set to False,
+as this would represent infinite rounds with no way to stop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_rounds</strong> – the maximum number of rounds to play. If set to 0, will have no maximum.
+optional, defaults to 0</p></li>
+<li><p><strong>prompt_continue</strong> – whether to prompt users to continue. optional, defaults to True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.announce_ranking">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">announce_ranking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#abstracts.EGameFactory.announce_ranking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Presents the ranking of scores in <cite>results</cite> in a discord embed in the
+public channel of the guild.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>result</strong> – List of <cite>vote</cite> - <cite>pid</cite> pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.check_continue">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">check_continue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_players</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#abstracts.EGameFactory.check_continue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Brings up a dialogue on the main channel to ask players whether they want to continue with
+same players, poll for new players or stop playing completely.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>min_players</strong> – the minimum number of players who need to join in order to continue.
+optional, defaults to 1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.dm_all_players">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">dm_all_players</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ipipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#abstracts.EGameFactory.dm_all_players" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method to send a message to all players in the game.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> – Embed content to send.</p></li>
+<li><p><strong>ipipeline</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">interactive.InteractionPipeline</span></code>, Optional) – Interaction pipeline</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Reply dictionary if interaction present, else <cite>None</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.dm_players">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">dm_players</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ipipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#abstracts.EGameFactory.dm_players" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method to send a message to a list of players.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> – Embed content to send.</p></li>
+<li><p><strong>player_ids</strong> – List of player ids to send message to.</p></li>
+<li><p><strong>interaction</strong> – Interaction specification</p></li>
+<li><p><strong>ipipeline</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">interactive.InteractionPipeline</span></code>, Optional) – Interaction pipeline</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Reply dictionary if interaction present, else <cite>None</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.dm_players_unique">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">dm_players_unique</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unique_content</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ipipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#abstracts.EGameFactory.dm_players_unique" title="Permalink to this definition">¶</a></dt>
+<dd><p>DM unique content to each player, indexed by player id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>unique_content</strong> – Embed content to send to player, indexed by the
+player id.</p></li>
+<li><p><strong>ipipeline</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">interactive.InteractionPipeline</span></code>, Optional) – Interaction pipeline</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Reply dictionary if interaction present, else <cite>None</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.embed">
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">text:</span> <span class="pre">str</span></em>, <em class="sig-param"><span class="pre">colour:</span> <span class="pre">discord.colour.Colour</span> <span class="pre">=</span> <span class="pre">&lt;Colour</span> <span class="pre">value=3447003&gt;</span></em>, <em class="sig-param"><span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#abstracts.EGameFactory.embed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method for creating <cite>discord.Embed</cite> instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>text</strong> – Text to insert in the <cite>description</cite> of the embed object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The embed instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>discord.Embed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.gather_players">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">gather_players</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#abstracts.EGameFactory.gather_players" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a player registration prompt, and returns the number of players
+that replied</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of players registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.players">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">players</span></span><em class="property"><span class="pre">:</span> <span class="pre">dict</span></em><a class="headerlink" href="#abstracts.EGameFactory.players" title="Permalink to this definition">¶</a></dt>
+<dd><p>Players property getter</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.scoreboard">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">scoreboard</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#abstracts.EGameFactory.scoreboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.scrape">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">scrape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#abstracts.EGameFactory.scrape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.start">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#abstracts.EGameFactory.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main entry</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="abstracts.EGameFactory.stop">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#abstracts.EGameFactory.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop game</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ebot</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><cite>EGameFactory</cite></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">Welcome to ebot’s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, dustpancake.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/abstracts/egamefactory.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

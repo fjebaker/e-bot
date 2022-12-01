@@ -26,7 +26,7 @@ class BigNacho(commands.Cog):
                 await message.reply(URI)
 
 
-def setup(bot):
-    bot.add_cog(BigNacho(bot))
+async def setup(bot):
+    await bot.add_cog(BigNacho(bot))
 
     return

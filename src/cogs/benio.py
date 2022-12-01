@@ -25,7 +25,7 @@ class BenIO(commands.Cog):
             self._append_message(message.content)
 
 
-def setup(bot):
-    bot.add_cog(BenIO(bot))
+async def setup(bot):
+    await bot.add_cog(BenIO(bot))
 
     return

@@ -238,11 +238,13 @@ class EGameFactory:
     # override
     async def stop(self):
         """Stop game"""
+        # pylint: disable=unnecessary-ellipsis
         ...
 
     # override
     async def start(self):
         """Main entry"""
+        # pylint: disable=unnecessary-ellipsis
         ...
 
     # override

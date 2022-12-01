@@ -27,7 +27,7 @@ class Angery(commands.Cog):
                     await message.add_reaction(emoji)
 
 
-def setup(bot):
-    bot.add_cog(Angery(bot))
+async def setup(bot):
+    await bot.add_cog(Angery(bot))
 
     return

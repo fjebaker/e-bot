@@ -1,13 +1,12 @@
 import os
 import logging
+import discord
 
 from ebot import EBot
 
 if __name__ == "__main__":
-    logging.basicConfig(level=20)
+    discord.utils.setup_logging()
     logging.info("Starting ebot...")
 
     bot = EBot()
-    bot.load_all_available_cogs()
-
     bot.run(os.environ["DISCORD_TOKEN"])

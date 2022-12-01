@@ -84,5 +84,6 @@ class DynamicLoad(commands.Cog):
             raise error
 
 
-def setup(bot):
-    bot.add_cog(DynamicLoad(bot))
+async def setup(bot):
+    await bot.add_cog(DynamicLoad(bot))
+    return

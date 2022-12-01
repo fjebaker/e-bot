@@ -27,23 +27,23 @@ class Nostalgia(commands.Cog):
             # skip bots
             ...
         else:
-            # if random.randint(1, 30) == 22: # 1 in 30 chance
-            gid = message.guild.id
-            if gid in self.wordlist:
-                wordlist = self.wordlist[gid]
-            else:
-                file = pathlib.Path("data/elash_prompts_{gid}.txt".format(gid=gid))
-                if not file.exists():
-                    self.logging.warning("file %s does not exist.", file.name)
-                    return
-                lines = file.read_text("utf-8").split("\n")
-                self.wordlist[gid] = [item for item in lines if item]
-                wordlist = self.wordlist[gid]
+            if random.randint(1, 30) == 22: # 1 in 30 chance
+                gid = message.guild.id
+                if gid in self.wordlist:
+                    wordlist = self.wordlist[gid]
+                else:
+                    file = pathlib.Path("data/elash_prompts_{gid}.txt".format(gid=gid))
+                    if not file.exists():
+                        self.logging.warning("file %s does not exist.", file.name)
+                        return
+                    lines = file.read_text("utf-8").split("\n")
+                    self.wordlist[gid] = [item for item in lines if item]
+                    wordlist = self.wordlist[gid]
 
-            memory = random.choice(wordlist)
-            prompt = random.choice(self.PROMPTS)
-            msg = f"{prompt} {memory}"
-            await message.reply(msg)
+                memory = random.choice(wordlist)
+                prompt = random.choice(self.PROMPTS)
+                msg = f"{prompt} {memory}"
+                await message.reply(msg)
 
 
 async def setup(bot):

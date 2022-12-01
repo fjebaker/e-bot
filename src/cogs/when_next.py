@@ -49,7 +49,7 @@ class WhenNext(commands.Cog):
         )
         await ipl.send_and_watch(
             context.channel,
-            discord.embed(
+            discord.Embed(
                 title="Hang-out planning",
                 description="Uhhhh so when do you wanna hang out?",
                 colour=discord.Colour.blue()

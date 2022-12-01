@@ -46,7 +46,7 @@ class VideoThanks(commands.Cog):
                 await message.reply(random.choice(MESSAGES))
 
 
-def setup(bot):
-    bot.add_cog(VideoThanks(bot))
+async def setup(bot):
+    await bot.add_cog(VideoThanks(bot))
 
     return

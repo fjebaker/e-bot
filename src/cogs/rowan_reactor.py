@@ -18,7 +18,7 @@ class RowanReactor(commands.Cog):
             await message.add_reaction(EMOJI)
 
 
-def setup(bot):
-    bot.add_cog(RowanReactor(bot))
+async def setup(bot):
+    await bot.add_cog(RowanReactor(bot))
 
     return

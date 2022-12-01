@@ -27,7 +27,8 @@ class Nostalgia(commands.Cog):
             # skip bots
             ...
         else:
-            if random.randint(1, 30) == 22: # 1 in 30 chance
+            # 1 in 30 chance
+            if random.randint(1, 30) == 22:
                 gid = message.guild.id
                 if gid in self.wordlist:
                     wordlist = self.wordlist[gid]

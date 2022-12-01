@@ -11,16 +11,23 @@ class EBot(commands.Bot):
     """TODO"""
 
     def __init__(self):
-        super().__init__(command_prefix=".e ", activity=discord.Game(name="Loading..."))
+        # pylint: disable=assigning-non-slot
+        intents = discord.Intents.default()
+        intents.message_content = True
+        super().__init__(
+            command_prefix=".e ",
+            activity=discord.Game(name="Loading..."),
+            intents=intents,
+        )
         self.logging = logging.getLogger(__name__)
 
-    def load_all_available_cogs(self):
+    async def load_all_available_cogs(self):
         """TODO"""
         self.logging.info("Loading cogs...")
         for i in pkgutil.walk_packages(cogs.__path__, cogs.__name__ + "."):
             name = i.name
             try:
-                self.load_extension(name)
+                await self.load_extension(name)
                 self.logging.info(f"{name} loaded as extensions")
             except Exception as e:
                 self.logging.error(f"{name} failed to load: raised exception: {e}")
@@ -36,6 +43,7 @@ class EBot(commands.Bot):
 
     async def on_ready(self):
         """TODO"""
+        await self.load_all_available_cogs()
         await self.wait_until_ready()
         await self.change_presence(
             activity=discord.Activity(
@@ -48,7 +56,7 @@ class EBot(commands.Bot):
 
     async def on_command_error(self, context, error):
         """TODO"""
-        # pylint: disable=arguments-renamed
+        # pylint: disable=arguments-differ
         if isinstance(error, commands.CommandNotFound):
             self.logging.info(f"Call to unknown command {error}")
             await context.send(error)

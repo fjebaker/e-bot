@@ -17,8 +17,9 @@ COG_HELP = f"""
     Starts the process of finding out when people are next available to hang out
     Arguments:
         {FROM_KEY}: Specifies the first day that can be selected to hang out on
-        {UNTIL_KEY}: Specifies the last day that can be selected to hang out on 
+        {UNTIL_KEY}: Specifies the last day that can be selected to hang out on
 """
+
 
 class WhenNext(commands.Cog):
     def __init__(self, bot):
@@ -68,6 +69,7 @@ class WhenNext(commands.Cog):
     def _parse_command(self, cmd: str):
         cmd_parts = cmd.split(" ")
         return dict(zip(cmd_parts[::2], cmd_parts[1::2]))
+
 
 def setup(bot):
     bot.add_cog(WhenNext(bot))

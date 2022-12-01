@@ -32,7 +32,7 @@ class Nostalgia(commands.Cog):
                 if gid in self.wordlist:
                     wordlist = self.wordlist[gid]
                 else:
-                    file = pathlib.Path("data/elash_prompts_{gid}.txt".format(gid=gid))
+                    file = pathlib.Path("data/elash_safeties_{gid}.txt".format(gid=gid))
                     if not file.exists():
                         self.logging.warning("file %s does not exist.", file.name)
                         return

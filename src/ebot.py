@@ -63,4 +63,3 @@ class EBot(commands.Bot):
         else:
             self.logging.error("Error occured in command: %s", error)
             await context.send(error)
-

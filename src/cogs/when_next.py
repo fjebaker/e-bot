@@ -45,15 +45,13 @@ class WhenNext(commands.Cog):
             if from_date.weekday() > 4:
                 weekend_days.append(from_date.strftime(DATE_FORMAT))
             from_date = from_date + datetime.timedelta(days=1)
-        ipl = InteractionPipeline(
-            ChoiceInteraction(*weekend_days)
-        )
+        ipl = InteractionPipeline(ChoiceInteraction(*weekend_days))
         await ipl.send_and_watch(
             context.channel,
             discord.Embed(
                 title="Hang-out planning",
                 description="Uhhhh so when do you wanna hang out?",
-                colour=discord.Colour.blue()
+                colour=discord.Colour.blue(),
             ),
             timeout=1,
         )
@@ -71,7 +69,7 @@ class WhenNext(commands.Cog):
         return dict(zip(cmd_parts[::2], cmd_parts[1::2]))
 
 
-def setup(bot):
-    bot.add_cog(WhenNext(bot))
+async def setup(bot):
+    await bot.add_cog(WhenNext(bot))
 
     return

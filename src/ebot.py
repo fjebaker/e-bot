@@ -61,4 +61,5 @@ class EBot(commands.Bot):
             self.logging.info(f"Call to unknown command {error}")
             await context.send(error)
         else:
-            raise error
+            self.logging.error("Error occured in command: %s", error)
+            await context.send(error)

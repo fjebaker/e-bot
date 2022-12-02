@@ -29,6 +29,7 @@ class Nostalgia(commands.Cog):
         else:
             # 1 in 30 chance
             if random.randint(1, 30) == 22:
+                self.logging.info("nostalgia invoked!")
                 gid = message.guild.id
                 if gid in self.wordlist:
                     wordlist = self.wordlist[gid]

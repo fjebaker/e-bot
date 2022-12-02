@@ -25,25 +25,25 @@ def reset_dynamic_load(dynamic_load):
 # tests
 
 
-def test_reload_cog(dynamic_load):
-    assert dynamic_load._reload_cog("cogs.test_cog") == "Reloaded `cogs.test_cog`"
+async def test_reload_cog(dynamic_load):
+    assert await dynamic_load._reload_cog("cogs.test_cog") == "Reloaded `cogs.test_cog`"
     dynamic_load.bot.reload_extension.assert_has_calls([call("cogs.test_cog")])
 
-    assert dynamic_load._reload_cog("cogs.new_cog") == "Loaded new cog `cogs.new_cog`"
+    assert await dynamic_load._reload_cog("cogs.new_cog") == "Loaded new cog `cogs.new_cog`"
     dynamic_load.bot.load_extension.assert_has_calls([call("cogs.new_cog")])
 
     dynamic_load.bot.load_extension.side_effect = Exception("test_exception")
-    assert dynamic_load._reload_cog("cogs.new_cog") == "No such cog: `cogs.new_cog`"
+    assert await dynamic_load._reload_cog("cogs.new_cog") == "No such cog: `cogs.new_cog`"
 
     dynamic_load.bot.reload_extension.side_effect = Exception("test_exception")
     assert (
-        dynamic_load._reload_cog("cogs.test_cog")
+        await dynamic_load._reload_cog("cogs.test_cog")
         == "`cogs.test_cog` raised exception: ```\ntest_exception\n```"
     )
 
 
-def test_reload_all_cogs(dynamic_load):
-    assert dynamic_load._reload_all_cogs() == ["cogs.test_cog"]
+async def test_reload_all_cogs(dynamic_load):
+    assert await dynamic_load._reload_all_cogs() == ["cogs.test_cog"]
     dynamic_load.bot.reload_extension.assert_has_calls([call("cogs.test_cog")])
 
 

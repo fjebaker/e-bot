@@ -71,7 +71,7 @@ class WhenNext(commands.Cog):
         return dict(zip(cmd_parts[::2], cmd_parts[1::2]))
 
 
-def setup(bot):
-    bot.add_cog(WhenNext(bot))
+async def setup(bot):
+    await bot.add_cog(WhenNext(bot))
 
     return

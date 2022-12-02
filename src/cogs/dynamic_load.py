@@ -10,7 +10,7 @@ class DynamicLoad(commands.Cog):
         self.bot = bot
         self.logging = logging.getLogger(__name__)
 
-    def _reload_all_cogs(self) -> list:
+    async def _reload_all_cogs(self) -> list:
         self.logging.info("Reloading cogs...")
 
         _reloaded = []
@@ -21,19 +21,19 @@ class DynamicLoad(commands.Cog):
                 # skip
                 continue
             try:
-                self.bot.reload_extension(cog)
+                await self.bot.reload_extension(cog)
             except Exception as e:
                 self.logging.error(f"{cog} failed to reload: raised exception: {e}")
             else:
                 _reloaded.append(cog)
         return _reloaded
 
-    def _reload_cog(self, cog_name) -> bool:
+    async def _reload_cog(self, cog_name) -> bool:
         self.logging.info(f"Attempting reload on {cog_name}...")
 
         if cog_name in self.bot.extensions.keys():
             try:
-                self.bot.reload_extension(cog_name)
+                await self.bot.reload_extension(cog_name)
             except Exception as e:
                 self.logging.error(
                     f"{cog_name} failed to reload: raised exception: {e}"
@@ -45,7 +45,7 @@ class DynamicLoad(commands.Cog):
 
         else:
             try:
-                self.bot.load_extension(cog_name)
+                await self.bot.load_extension(cog_name)
             except Exception as e:
                 self.logging.error(f"{cog_name} failed to load: raised exception: {e}")
                 return f"No such cog: `{cog_name}`"
@@ -62,7 +62,7 @@ class DynamicLoad(commands.Cog):
         self.logging.info(f"entry called with {cog_name}")
 
         if cog_name == "all":
-            reloaded = self._fmt_cog_list(self._reload_all_cogs())
+            reloaded = self._fmt_cog_list(await self._reload_all_cogs())
             await context.send(f"Reloaded\n{reloaded}")
 
         elif cog_name == "list":
@@ -73,7 +73,7 @@ class DynamicLoad(commands.Cog):
             await context.send("Cannot act on self-cog.")
 
         else:
-            resp = self._reload_cog(cog_name)
+            resp = await self._reload_cog(cog_name)
             await context.send(resp)
 
     async def cog_command_error(self, context, error):

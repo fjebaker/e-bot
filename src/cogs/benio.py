@@ -20,7 +20,7 @@ class BenIO(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        self.logging.info(f"{message.author.name}, {message.author.id}")
+        # self.logging.info(f"{message.author.name}, {message.author.id}")
         if message.author.id == _ID:
             self._append_message(message.content)
 

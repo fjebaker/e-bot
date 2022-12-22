@@ -10,14 +10,14 @@ from interactive import (
 )
 
 DATE_FORMAT = "%d/%m/%y"
-FROM_KEY = "--from"
-UNTIL_KEY = "--until"
 
-COG_HELP = f"""
+COG_HELP = """
     Starts the process of finding out when people are next available to hang out
     Arguments:
-        {FROM_KEY}: Specifies the first day that can be selected to hang out on
-        {UNTIL_KEY}: Specifies the last day that can be selected to hang out on
+        days: Specifies the number of days from the start date to check availability across.
+        weekdays: Filters the included days to only include certain days of the week.
+           For example, "135" would only include Mondays, Wednesdays and Fridays.
+        start_offset: How many days after the current date the start date should be.
 """
 
 
@@ -27,25 +27,43 @@ class WhenNext(commands.Cog):
         self.logging = logging.getLogger(__name__)
 
     @commands.command(name="whennext")
-    async def entry(self, context, cmd: str):
+    async def entry(self, context, days: str = "31", weekdays: str = "567", start_offset: str = "0"):
         self.logging.info("whennext called")
-        from_date = datetime.date.today()
-        until_date = from_date + datetime.timedelta(weeks=2)
-        weekend_days = []
+        days_int = self._parse_int(context, "days", days)
+        if days_int is False:
+            return
+        offset_int = self._parse_int(context, "start_offset", start_offset)
+        if offset_int is False:
+            return
+        from_date = datetime.date.today() + datetime.timedelta(days=offset_int)
+        until_date = from_date + datetime.timedelta(days=days_int)
+        valid_days = []
         while from_date < until_date:
-            if from_date.weekday() > 4:
-                weekend_days.append(from_date.strftime(DATE_FORMAT))
+            if str(from_date.weekday()) in weekdays:
+                valid_days.append(from_date.strftime(DATE_FORMAT))
             from_date = from_date + datetime.timedelta(days=1)
-        ipl = InteractionPipeline(ChoiceInteraction(*weekend_days))
-        await ipl.send_and_watch(
-            context.channel,
-            discord.Embed(
-                title="Hang-out planning",
-                description="Uhhhh so when do you wanna hang out?",
-                colour=discord.Colour.blue(),
-            ),
-            timeout=1,
-        )
+        if valid_days:
+            ipl = InteractionPipeline(ChoiceInteraction(*valid_days))
+            await ipl.send_and_watch(
+                context.channel,
+                discord.Embed(
+                    title="Hang-out planning",
+                    description="Uhhhh so when do you wanna hang out?",
+                    colour=discord.Colour.blue(),
+                ),
+                timeout=1,
+            )
+        else:
+            await context.send(f"Invalid combination of parameters led to no valid days to vote on")
+
+
+    async def _parse_int(self, context, param_name: str, input: str):
+        try:
+            parsed_int = int(input)
+            return parsed_int
+        except ValueError:
+            await context.send(f"Invalid input for parameter '{param_name}' - expecting an integer, got '{input}'")
+            return False
 
 async def setup(bot):
     await bot.add_cog(WhenNext(bot))

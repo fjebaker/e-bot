@@ -56,12 +56,12 @@ class WhenNext(commands.Cog):
         else:
             await context.send("Invalid combination of parameters led to no valid days to vote on")
 
-    async def _parse_int(self, context, param_name: str, inputText: str):
+    async def _parse_int(self, context, param_name: str, input_text: str):
         try:
-            parsed_int = int(inputText)
+            parsed_int = int(input_text)
             return parsed_int
         except ValueError:
-            await context.send(f"Invalid input for parameter '{param_name}' - expecting an integer, got '{inputText}'")
+            await context.send(f"Invalid input for parameter '{param_name}' - expecting an integer, got '{input_text}'")
             return False
 
 

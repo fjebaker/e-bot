@@ -29,14 +29,15 @@ class WhenNext(commands.Cog):
     @commands.command(name="whennext")
     async def entry(self, context, days: str = "31", weekdays: str = "567", start_offset: str = "0"):
         self.logging.info("whennext called")
-        days_int = self._parse_int(context, "days", days)
+        days_int = await self._parse_int(context, "days", days)
         if days_int is False:
             return
-        offset_int = self._parse_int(context, "start_offset", start_offset)
+        offset_int = await self._parse_int(context, "start_offset", start_offset)
         if offset_int is False:
             return
         from_date = datetime.date.today() + datetime.timedelta(days=offset_int)
         until_date = from_date + datetime.timedelta(days=days_int)
+        self.logging.info(f"Calculating dates from {from_date} until {until_date}, including weekdays {weekdays}")
         valid_days = []
         while from_date < until_date:
             if str(from_date.weekday()) in weekdays:
@@ -48,7 +49,7 @@ class WhenNext(commands.Cog):
                 context.channel,
                 discord.Embed(
                     title="Hang-out planning",
-                    description="Uhhhh so when do you wanna hang out?",
+                    description="Uhhhhh so when do you wanna hang out?",
                     colour=discord.Colour.blue(),
                 ),
                 timeout=1,

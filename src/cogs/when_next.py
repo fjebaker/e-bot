@@ -10,14 +10,14 @@ from interactive import (
 )
 
 DATE_FORMAT = "%d/%m/%y"
-FROM_KEY = "--from"
-UNTIL_KEY = "--until"
 
-COG_HELP = f"""
+COG_HELP = """
     Starts the process of finding out when people are next available to hang out
     Arguments:
-        {FROM_KEY}: Specifies the first day that can be selected to hang out on
-        {UNTIL_KEY}: Specifies the last day that can be selected to hang out on
+        days: Specifies the number of days from the start date to check availability across.
+        weekdays: Filters the included days to only include certain days of the week.
+           For example, "135" would only include Mondays, Wednesdays and Fridays.
+        start_offset: How many days after the current date the start date should be.
 """
 
 
@@ -27,46 +27,43 @@ class WhenNext(commands.Cog):
         self.logging = logging.getLogger(__name__)
 
     @commands.command(name="whennext")
-    async def entry(self, context, cmd: str):
+    async def entry(self, context, days: str = "31", weekdays: str = "567", start_offset: str = "0"):
         self.logging.info("whennext called")
-        arg_dict = self._parse_command(cmd)
-        from_date = datetime.date.today()
-        if FROM_KEY in arg_dict:
-            from_date = self._parse_date(context, arg_dict[FROM_KEY])
-            if from_date is False:
-                return
-        until_date = from_date + datetime.timedelta(weeks=2)
-        if UNTIL_KEY in arg_dict:
-            until_date = self._parse_date(context, arg_dict[UNTIL_KEY])
-            if until_date is False:
-                return
-        weekend_days = []
+        days_int = await self._parse_int(context, "days", days)
+        if days_int is False:
+            return
+        offset_int = await self._parse_int(context, "start_offset", start_offset)
+        if offset_int is False:
+            return
+        from_date = datetime.date.today() + datetime.timedelta(days=offset_int)
+        until_date = from_date + datetime.timedelta(days=days_int)
+        self.logging.info(f"Calculating dates from {from_date} until {until_date}, including weekdays {weekdays}")
+        valid_days = []
         while from_date < until_date:
-            if from_date.weekday() > 4:
-                weekend_days.append(from_date.strftime(DATE_FORMAT))
+            if str(from_date.weekday()) in weekdays:
+                valid_days.append(from_date.strftime(DATE_FORMAT))
             from_date = from_date + datetime.timedelta(days=1)
-        ipl = InteractionPipeline(ChoiceInteraction(*weekend_days))
-        await ipl.send_and_watch(
-            context.channel,
-            discord.Embed(
-                title="Hang-out planning",
-                description="Uhhhh so when do you wanna hang out?",
-                colour=discord.Colour.blue(),
-            ),
-            timeout=1,
-        )
+        if valid_days:
+            ipl = InteractionPipeline(ChoiceInteraction(*valid_days))
+            await ipl.send_and_watch(
+                context.channel,
+                discord.Embed(
+                    title="Hang-out planning",
+                    description="Uhhhhh so when do you wanna hang out?",
+                    colour=discord.Colour.blue(),
+                ),
+                timeout=1,
+            )
+        else:
+            await context.send("Invalid combination of parameters led to no valid days to vote on")
 
-    async def _parse_date(self, context, date: str):
+    async def _parse_int(self, context, param_name: str, input_text: str):
         try:
-            from_date = datetime.datetime.strptime(date, DATE_FORMAT)
-            return from_date.date()
+            parsed_int = int(input_text)
+            return parsed_int
         except ValueError:
-            await context.send("Invalid start date - try the format dd/mm/yy")
+            await context.send(f"Invalid input for parameter '{param_name}' - expecting an integer, got '{input_text}'")
             return False
-
-    def _parse_command(self, cmd: str):
-        cmd_parts = cmd.split(" ")
-        return dict(zip(cmd_parts[::2], cmd_parts[1::2]))
 
 
 async def setup(bot):

@@ -3,6 +3,11 @@ import logging
 import discord
 from discord.ext import commands
 
+MAJOR_VERSION = 0
+MINOR_VERSION = 1
+PATCH_VERSION = 0
+RELEASE_CANDIDATE = 1
+
 class Version(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -10,7 +15,13 @@ class Version(commands.Cog):
 
     @commands.command(name="version")
     async def entry(self, context):
-        await context.send("Currently running e-bot version 0.1.0")
+        await context.send(self._get_version_string())
+
+    def _get_version_string(self):
+        release_extension = ""
+        if not RELEASE_CANDIDATE:
+            release_extension = f"-rc{RELEASE_CANDIDATE}"
+        return f"Currently running e-bot version {MAJOR_VERSION}.{MINOR_VERSION}.{PATCH_VERSION}{release_extension}"
 
 
 async def setup(bot):

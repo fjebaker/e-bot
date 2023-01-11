@@ -19,7 +19,7 @@ class Version(commands.Cog):
 
     def _get_version_string(self):
         release_extension = ""
-        if not RELEASE_CANDIDATE:
+        if RELEASE_CANDIDATE:
             release_extension = f"-rc{RELEASE_CANDIDATE}"
         return f"Currently running e-bot version {MAJOR_VERSION}.{MINOR_VERSION}.{PATCH_VERSION}{release_extension}"
 

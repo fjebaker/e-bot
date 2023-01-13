@@ -15,7 +15,9 @@ class Version(commands.Cog):
 
     @commands.command(name="version")
     async def entry(self, context):
-        await context.send(self._get_version_string())
+        current_version = self._get_version_string()
+        self.logging.info(f"version called - current version is {current_version}")
+        await context.send(f"Currently running e-bot version {current_version}")
 
     def _get_version_string(self):
         release_extension = ""

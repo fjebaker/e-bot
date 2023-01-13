@@ -5,7 +5,7 @@ from discord.ext import commands
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
 PATCH_VERSION = 0
-RELEASE_CANDIDATE = 1
+RELEASE_CANDIDATE = 0
 
 
 class Version(commands.Cog):

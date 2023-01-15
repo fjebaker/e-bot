@@ -1,7 +1,9 @@
 import logging
-import eversion
 
 from discord.ext import commands
+
+import eversion
+
 
 class Version(commands.Cog):
     def __init__(self, bot):

@@ -20,7 +20,7 @@ class Version(commands.Cog):
         release_extension = ""
         if eversion.RELEASE_CANDIDATE:
             release_extension = f"-rc{eversion.RELEASE_CANDIDATE}"
-        return f"Currently running e-bot version {eversion.MAJOR_VERSION}.{eversion.MINOR_VERSION}.{eversion.PATCH_VERSION}{release_extension}"
+        return f"{eversion.MAJOR_VERSION}.{eversion.MINOR_VERSION}.{eversion.PATCH_VERSION}{release_extension}"
 
 
 async def setup(bot):

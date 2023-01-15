@@ -1,12 +1,7 @@
 import logging
+import eversion
 
 from discord.ext import commands
-
-MAJOR_VERSION = 0
-MINOR_VERSION = 1
-PATCH_VERSION = 0
-RELEASE_CANDIDATE = 0
-
 
 class Version(commands.Cog):
     def __init__(self, bot):
@@ -21,9 +16,9 @@ class Version(commands.Cog):
 
     def _get_version_string(self):
         release_extension = ""
-        if RELEASE_CANDIDATE:
-            release_extension = f"-rc{RELEASE_CANDIDATE}"
-        return f"Currently running e-bot version {MAJOR_VERSION}.{MINOR_VERSION}.{PATCH_VERSION}{release_extension}"
+        if eversion.RELEASE_CANDIDATE:
+            release_extension = f"-rc{eversion.RELEASE_CANDIDATE}"
+        return f"Currently running e-bot version {eversion.MAJOR_VERSION}.{eversion.MINOR_VERSION}.{eversion.PATCH_VERSION}{release_extension}"
 
 
 async def setup(bot):

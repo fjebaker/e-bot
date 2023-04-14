@@ -132,4 +132,4 @@ dmypy.json
 # Custom
 secrets
 
-.vscode
+.pdm-python

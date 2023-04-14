@@ -1,0 +1,35 @@
+[tool.pdm]
+allow_prereleases = true
+
+[[tool.pdm.source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "pylint",
+    "pytest",
+    "pytest-socket",
+    "pytest-asyncio",
+    "pytest-cov",
+    "coverage",
+    "Sphinx",
+]
+
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "", email = ""},
+]
+dependencies = ["discord"]
+requires-python = ">=3.9"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

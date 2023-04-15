@@ -19,7 +19,7 @@ class TimedView(discord.ui.View):
         self._is_complete = False
         self.delete_after = delete_after
 
-        self.message: discord.Message | None = None
+        self.message: discord.Message = None
 
     async def send_and_wait(self, channel: discord.TextChannel):
         self.embed.set_footer(text=self.TIME_FMT.format(self.time))

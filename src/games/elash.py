@@ -13,6 +13,7 @@ from interactive import (
     ButtonInteraction,
     ChoiceInteraction,
     UserUniqueView,
+    PollView,
 )
 
 import discord
@@ -143,19 +144,17 @@ class ELash(EGameFactory):
 
         # present / vote on answers
         for index, solutions in answers.items():
-            response = await self.vote_on(prompts[index], solutions)
+            message, result = await self.vote_on(prompts[index], solutions)
 
             # announce ranking
-            await self.announce_ranking(response["result"])
+            await self.announce_ranking(result)
 
             if used_safety:
                 # adjust for safeties
-                result = self._adjust_safety(response["result"], used_safety)
-            else:
-                result = response["result"]
+                result = self._adjust_safety(result, used_safety)
 
             # edit vote board
-            await self._modify_vote_board(response["message"], result)
+            await self._modify_vote_board(message, result)
 
             # tally scores
             _ = [self._add_score(i[1], i[0]) for i in result]
@@ -190,30 +189,33 @@ class ELash(EGameFactory):
 
         return outgoing
 
-    async def vote_on(self, prompt: str, solutions: dict) -> dict:
+    async def vote_on(
+        self, prompt: str, solutions: dict
+    ) -> Tuple[discord.Message, list]:
         """TODO"""
         # keep immutable copy
         pids = list(solutions.keys())
         answers = [solutions[k] for k in pids]
 
-        ipl = InteractionPipeline(
-            ChoiceInteraction(*answers, max_votes=self._num_players)
-        )
-        response = await ipl.send_and_watch(
-            self.channel, self.embed(f"Vote for your favourite:\n**{prompt}**\n")
-        )
+        # assemble vote card and issue the poll
+        embed = self.embed(f"Click to vote:\n**{prompt}**\n")
+        labels = []
+        for i, ans in enumerate(answers):
+            label = f"{i+1}"
+            embed.add_field(name=label, value=ans, inline=False)
+            labels.append(label)
 
-        response["result"] = sorted(
-            # tuple of (votes, pid, index of answer in table)
-            (
-                (v, pids[int(i) - 1], int(i) - 1)
-                for i, v in response["response"]["choice"].items()
-            ),
+        poll = PollView(list(self.players.keys()), embed, labels)
+        await poll.send_and_wait(self.channel)
+
+        # get the results
+        result = sorted(
+            ((v, pids[i], i) for (i, v) in enumerate(poll.votes)),
             key=lambda i: i[0],
             reverse=True,
         )
 
-        return response
+        return poll.message, result
 
     async def scrape(self, context) -> str:
         """TODO"""

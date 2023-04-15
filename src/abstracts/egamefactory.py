@@ -13,8 +13,7 @@ import discord
 from utils import dmerge
 from utils.lookups import EMOJI_FORWARD
 
-from interactive import InteractionPipeline, ChoiceInteraction
-from interactive.selection import TimedView
+from interactive import InteractionPipeline, ChoiceInteraction, GatherPlayersView
 
 from econfig import PATH_EXTENSION, PLAYER_GATHER_TIMEOUT
 
@@ -24,41 +23,6 @@ def replace_rules(content: str) -> str:
     return content.replace("{blank}", "_" * 5).replace(
         "{the current year}", "the current year"
     )
-
-
-class GatherPlayersView(TimedView):
-    def __init__(self, embed):
-        super().__init__(embed, timeout=PLAYER_GATHER_TIMEOUT)
-        self.players = []
-        self.text: str = self.embed.description
-
-    async def _update_player_list(self):
-        text = (
-            self.text + "\n\nPlayers:\n" + "\n -> ".join((i.name for i in self.players))
-        )
-        await self.update_text(text)
-
-    async def interaction_check(self, interaction: discord.Interaction):
-        # don't let users with the same id interact twice
-        is_playing = any((i.id == interaction.user.id for i in self.players))
-
-        if is_playing:
-            # let the player know they have already joined
-            username = interaction.user.name
-            await interaction.response.send_message(
-                f"@{username}: you have already joined."
-            )
-            return False
-
-        return True
-
-    @discord.ui.button(label="Join", style=discord.ButtonStyle.primary)
-    async def button_callback(self, interaction: discord.Interaction, button):
-        # append user
-        self.players.append(interaction.user)
-        await self._update_player_list()
-        # keep listening for more events
-        await interaction.response.defer()
 
 
 class EGameFactory:
@@ -78,7 +42,7 @@ class EGameFactory:
         self.logging = logging.getLogger(logger_name)
 
         self.guild = context.guild
-        self.channel = context.channel
+        self.channel: discord.TextChannel = context.channel
 
         # players property
         self._players = {}  # index by id
@@ -227,7 +191,7 @@ class EGameFactory:
         :return: Authors indexed by id.
         """
 
-        text = f"{self.game_description}\n\nReply to this message to join the game."
+        text = f"{self.game_description}\n\nClick to join the game."
         gather = GatherPlayersView(self.embed(text))
         await gather.send_and_wait(self.channel)
 
@@ -243,7 +207,9 @@ class EGameFactory:
             [f"{i[0]} votes for {self.players[i[1]]}" for i in result]
         )
 
-        await self.channel.send(embed=self.embed(scoreboard))
+        await self.channel.send(
+            embed=self.embed(scoreboard), delete_after=self.wait_duration
+        )
         await asyncio.sleep(self.wait_duration)
 
     async def scoreboard(self):

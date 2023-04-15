@@ -205,6 +205,5 @@ class GuildDispatch(commands.Cog):
 
     @commands.command(name="dispatch")
     async def debug(self, context, cmd):
-
         if cmd == "debug":
             await context.send(embed=self._debug_embed(str(self.lookup)))

@@ -31,7 +31,6 @@ def randomize_prompts(prompts: list) -> list:
 
 
 class ELash(EGameFactory):
-
     # configuration
 
     game_name = "E Lash"
@@ -135,7 +134,6 @@ class ELash(EGameFactory):
             # unpack
             used_safety = []
             for pid in pids:
-
                 if pid in replies:
                     message = replies[pid].content
                 else:
@@ -179,7 +177,7 @@ class ELash(EGameFactory):
         self.logging.info("Modifying score board")
         embed = message.embeds[0]
 
-        for (_, pid, i) in result:
+        for _, pid, i in result:
             field = embed.fields[i]
             embed.set_field_at(
                 i,
@@ -193,7 +191,7 @@ class ELash(EGameFactory):
     def _adjust_safety(self, result: list, used_safety: list) -> list:
         """TODO"""
         outgoing = []
-        for (v, pid, i) in result:
+        for v, pid, i in result:
             if pid in used_safety:
                 outgoing.append((1 if v >= 1 else 0, pid, i))
             else:

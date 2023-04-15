@@ -107,7 +107,6 @@ class CardPyramid:
 
 
 class RideTheBus(EGameFactory):
-
     # configuration
     game_name = "Ride the Bus"
     game_description = "Drink."
@@ -209,7 +208,6 @@ class RideTheBus(EGameFactory):
 
         # as many rounds as base of pyramid
         for round_num in range(pyramid.base):
-
             self.logging.info("Round two: row %d of %d", round_num + 1, pyramid.base)
 
             # reveal
@@ -382,7 +380,6 @@ class RideTheBus(EGameFactory):
         def handler(
             pid: int, answer: str, card: Card, amount=1
         ) -> Tuple[discord.Colour, str]:
-
             hand = self.hands[pid]
             self.logging.info("pid %d gave answer '%s'", pid, answer)
             if hand:

@@ -27,7 +27,9 @@ class WhenNext(commands.Cog):
         self.logging = logging.getLogger(__name__)
 
     @commands.command(name="whennext")
-    async def entry(self, context, days: str = "31", weekdays: str = "567", start_offset: str = "0"):
+    async def entry(
+        self, context, days: str = "31", weekdays: str = "567", start_offset: str = "0"
+    ):
         self.logging.info("whennext called")
         days_int = await self._parse_int(context, "days", days)
         if days_int is False:
@@ -37,7 +39,9 @@ class WhenNext(commands.Cog):
             return
         from_date = datetime.date.today() + datetime.timedelta(days=offset_int)
         until_date = from_date + datetime.timedelta(days=days_int)
-        self.logging.info(f"Calculating dates from {from_date} until {until_date}, including weekdays {weekdays}")
+        self.logging.info(
+            f"Calculating dates from {from_date} until {until_date}, including weekdays {weekdays}"
+        )
         valid_days = []
         while from_date < until_date:
             if str(from_date.weekday()) in weekdays:
@@ -55,14 +59,18 @@ class WhenNext(commands.Cog):
                 timeout=1,
             )
         else:
-            await context.send("Invalid combination of parameters led to no valid days to vote on")
+            await context.send(
+                "Invalid combination of parameters led to no valid days to vote on"
+            )
 
     async def _parse_int(self, context, param_name: str, input_text: str):
         try:
             parsed_int = int(input_text)
             return parsed_int
         except ValueError:
-            await context.send(f"Invalid input for parameter '{param_name}' - expecting an integer, got '{input_text}'")
+            await context.send(
+                f"Invalid input for parameter '{param_name}' - expecting an integer, got '{input_text}'"
+            )
             return False
 
 

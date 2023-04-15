@@ -37,7 +37,6 @@ class ButtonInteraction(Monitor):
             ),
         )
         if selections:
-
             # hot branch
             if self.callback:
                 self.callback(message)

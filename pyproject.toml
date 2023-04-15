@@ -6,6 +6,9 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[tool.pdm.scripts]
+start = "python src"
+
 [tool.pdm.dev-dependencies]
 dev = [
     "black",

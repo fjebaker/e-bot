@@ -42,6 +42,7 @@ class ELash(EGameFactory):
     game_name = "E Lash"
     game_description = ""
     wait_duration = 5
+    prompt_duration = 30
     min_players = 2
     cog_help = "TODO"
 
@@ -122,7 +123,7 @@ class ELash(EGameFactory):
 
             # get user inputs
             root_embed = self.embed(f"Round: {game_round} -- Click to get your prompts")
-            view = UserUniqueView(root_embed, unique_content, delete_after=True)
+            view = UserUniqueView(root_embed, unique_content, delete_after=True, timeout=self.prompt_duration)
             await view.send_and_wait(self.channel)
 
             # get replies
@@ -167,12 +168,12 @@ class ELash(EGameFactory):
         self.logging.info("Modifying score board")
         embed = message.embeds[0]
 
-        for _, pid, i in result:
+        for votes, pid, i in result:
             field = embed.fields[i]
             embed.set_field_at(
                 i,
-                name=field.name,
-                value=f"{field.value} :: *{self.players[pid]}*",
+                name=f"Total votes: {votes}",
+                value=f"{field.value} -- *{self.players[pid]}*",
                 inline=False,
             )
 

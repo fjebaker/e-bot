@@ -1,5 +1,9 @@
-import emoji
+import logging
 import random
+
+import emoji
+
+logger = logging.getLogger(__name__)
 
 # internal key to emoji
 EMOJI_FORWARD = {
@@ -22,11 +26,16 @@ EMOJI_FORWARD = {
 # reverse
 EMOJI_BACKWARD = {v: k for k, v in EMOJI_FORWARD.items()}
 
-
 def random_emoji():
-    string = random.choice(EMOJI_UNSORTED)
-    return emoji.emojize(string)
-
+    # this is extremely strong logic
+    while True:
+        string = random.choice(EMOJI_UNSORTED)
+        try: 
+            em = emoji.emojize(string)
+        except Exception as e:
+            logger.warning("%s does not map to an emoji", string)
+        else:
+            return em
 
 EMOJI_UNSORTED = [
     ":1st_place_medal:",

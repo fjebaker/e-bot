@@ -5,3 +5,5 @@ from interactive.poll import PollInteraction
 from interactive.message import MessageInteraction
 from interactive.choice import ChoiceInteraction
 from interactive.messagechoice import MessageChoiceInteraction
+
+from interactive.userunique import UserUniqueView

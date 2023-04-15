@@ -2,6 +2,8 @@ import itertools
 import random
 import collections
 
+from typing import Dict, Union, Tuple
+
 from abstracts import EGameFactory
 
 from utils.lookups import EMOJI_FORWARD
@@ -10,7 +12,10 @@ from interactive import (
     MessageInteraction,
     ButtonInteraction,
     ChoiceInteraction,
+    UserUniqueView,
 )
+
+import discord
 
 
 def randomize_prompts(prompts: list) -> list:
@@ -36,7 +41,7 @@ class ELash(EGameFactory):
     game_name = "E Lash"
     game_description = ""
     wait_duration = 5
-    min_players = 2
+    min_players = 1
     cog_help = "TODO"
 
     has_scrape = True
@@ -96,57 +101,43 @@ class ELash(EGameFactory):
         prompts = {i: random.choice(self.prompts) for i in range(self._num_players)}
         ordering = randomize_prompts(prompts.keys())
 
-        # announce new round
-        await self.channel.send(
-            embed=self.embed("Starting new round -- check your DMs for your prompts!")
-        )
-
         # need an immutable reference
         pids = self.players.keys()
 
         # give each player an ordering of prompts
         pidmap = {pid: ordering[i] for i, pid in enumerate(pids)}
 
-        # build interaction pipeline
-        ipl = InteractionPipeline(
-            MessageInteraction(),
-            ButtonInteraction(
-                "temperature",
-                helpstring=f"Press {EMOJI_FORWARD['temperature']} for a Safety Answer (maximum 1 point).",
-            ),
-        )
-
-        # dm prompts to players (requires two rounds so even number of answers)
+        # prompts to players (requires two rounds so even number of answers)
         # create a data structure to hold the results
         answers = collections.defaultdict(dict)
+
         # will map prompt_id -> {pid -> answer}
         for game_round in range(2):
             # generate unique content to send to players
             unique_content = {
-                pid: self.embed(prompts[order[game_round]])
+                pid: (prompts[order[game_round]], random.choice(self.safeties))
                 for pid, order in pidmap.items()
             }
 
+            # get user inputs
+            root_embed = self.embed(f"Round: {game_round} -- Click to get your prompts")
+            view = UserUniqueView(root_embed, unique_content, delete_after=True)
+            await view.send_and_wait(self.channel)
+
             # get replies
-            dm_response = await self.dm_players_unique(unique_content, ipipeline=ipl)
-            replies = dm_response.get("message", [])
+            replies: Dict[int, Tuple[str, bool]] = view.responses
 
             # unpack
             used_safety = []
             for pid in pids:
-                if pid in replies:
-                    message = replies[pid].content
-                else:
+                reply, safety = replies.get(pid, (unique_content[pid][1], True))
+                if safety:
                     # doesn't matter if people picked safety or timeout
-                    message = random.choice(self.safeties)
                     used_safety.append(pid)
-                    await self.players[pid].send(
-                        embed=self.embed(f"Your safety is:\n**{message}**")
-                    )
-                    message = f"{message} *(Safety)*"
+                    reply = reply + " *(Safety)*"
 
                 p_num = pidmap[pid][game_round]
-                answers[p_num][pid] = message
+                answers[p_num][pid] = reply
 
         self.logging.info(answers)
 

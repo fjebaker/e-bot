@@ -42,7 +42,7 @@ class ELash(EGameFactory):
     game_name = "E Lash"
     game_description = ""
     wait_duration = 5
-    min_players = 1
+    min_players = 2
     cog_help = "TODO"
 
     has_scrape = True

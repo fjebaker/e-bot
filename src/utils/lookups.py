@@ -26,16 +26,18 @@ EMOJI_FORWARD = {
 # reverse
 EMOJI_BACKWARD = {v: k for k, v in EMOJI_FORWARD.items()}
 
+
 def random_emoji():
     # this is extremely strong logic
     while True:
         string = random.choice(EMOJI_UNSORTED)
-        try: 
+        try:
             em = emoji.emojize(string)
         except Exception as e:
             logger.warning("%s does not map to an emoji", string)
         else:
             return em
+
 
 EMOJI_UNSORTED = [
     ":1st_place_medal:",

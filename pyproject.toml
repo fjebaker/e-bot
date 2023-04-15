@@ -8,6 +8,10 @@ name = "pypi"
 
 [tool.pdm.scripts]
 start = "python src"
+lint = "pylint"
+flake = "flake8"
+format = "black"
+test = "pytest -vvv"
 
 [tool.pdm.dev-dependencies]
 dev = [

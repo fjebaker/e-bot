@@ -1,10 +1,12 @@
 import logging
 
-from typing import Dict, Tuple
+from typing import Coroutine, Dict, Tuple
 
 import discord
 
 from interactive.timedview import TimedView
+from utils.lookups import EMOJI_FORWARD, random_emoji
+from utils import async_context_wrap
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +27,23 @@ class UserPrompt(discord.ui.View):
         self.default = default_outcome
         self.used_default = False
 
-    @discord.ui.button(label="Safety")
+        enter_text_button = discord.ui.Button(
+            label="Enter text", emoji=random_emoji(), style=discord.ButtonStyle.green
+        )
+        enter_text_button.callback = async_context_wrap(self, self.user_input)
+
+        self.add_item(enter_text_button)
+
+    @discord.ui.button(
+        label="Safety",
+        emoji=EMOJI_FORWARD["temperature"],
+        style=discord.ButtonStyle.blurple,
+    )
     async def safety(self, interaction: discord.Interaction, button):
         self.outcome = None
         await self.resolve(interaction.message, interaction)
 
-    @discord.ui.button(label="Enter text")
-    async def user_input(self, interaction: discord.Interaction, button):
+    async def user_input(self, interaction: discord.Interaction):
         modal = PromptModal()
         await interaction.response.send_modal(modal)
         # wait for response
@@ -70,6 +82,12 @@ class UserUniqueView(TimedView):
         self.responses = {}
         self.interacted = []
 
+        btn = discord.ui.Button(
+            label="Get prompt", style=discord.ButtonStyle.green, emoji=random_emoji()
+        )
+        btn.callback = async_context_wrap(self, self.user_input)
+        self.add_item(btn)
+
     async def interaction_check(self, interaction: discord.Interaction):
         uid = interaction.user.id
         if uid in self.responses or uid in self.interacted:
@@ -91,8 +109,7 @@ class UserUniqueView(TimedView):
             )
             return False
 
-    @discord.ui.button(label="Get prompt")
-    async def user_input(self, interaction: discord.Interaction, button):
+    async def user_input(self, interaction: discord.Interaction):
         uid = interaction.user.id
 
         # tailor user specific modal with a timeout equal to time remaining

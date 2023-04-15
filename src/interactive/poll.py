@@ -4,7 +4,8 @@ from typing import List
 import discord
 from interactive.timedview import TimedView
 
-from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD
+from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD, random_emoji
+from utils import async_context_wrap
 from interactive.monitor import Monitor
 
 logger = logging.getLogger(__name__)
@@ -43,8 +44,13 @@ class PollView(TimedView):
         self.votes = [0 for _ in labels]
         self.voted = []
 
-    @discord.ui.button(label="Vote")
-    async def vote_callback(self, interaction: discord.Interaction, button):
+        btn = discord.ui.Button(
+            label="Vote", emoji=random_emoji(), style=discord.ButtonStyle.green
+        )
+        btn.callback = async_context_wrap(self, self.vote_callback)
+        self.add_item(btn)
+
+    async def vote_callback(self, interaction: discord.Interaction):
         poll = UserPollView(self.labels, timeout=self.time)
         await interaction.response.send_message(
             view=poll, ephemeral=True, delete_after=self.time

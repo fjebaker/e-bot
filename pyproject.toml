@@ -33,7 +33,10 @@ description = ""
 authors = [
     {name = "", email = ""},
 ]
-dependencies = ["discord"]
+dependencies = [
+    "discord",
+    "emoji>=2.2.0",
+]
 requires-python = ">=3.9"
 license = {text = "MIT"}
 

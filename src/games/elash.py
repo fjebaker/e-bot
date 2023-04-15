@@ -43,7 +43,7 @@ class ELash(EGameFactory):
     game_description = ""
     wait_duration = 5
     prompt_duration = 30
-    min_players = 2
+    min_players = 1
     cog_help = "TODO"
 
     has_scrape = True
@@ -113,6 +113,7 @@ class ELash(EGameFactory):
         # create a data structure to hold the results
         answers = collections.defaultdict(dict)
 
+        safety_uses = []
         # will map prompt_id -> {pid -> answer}
         for game_round in range(2):
             # generate unique content to send to players
@@ -123,7 +124,12 @@ class ELash(EGameFactory):
 
             # get user inputs
             root_embed = self.embed(f"Round: {game_round} -- Click to get your prompts")
-            view = UserUniqueView(root_embed, unique_content, delete_after=True, timeout=self.prompt_duration)
+            view = UserUniqueView(
+                root_embed,
+                unique_content,
+                delete_after=True,
+                timeout=self.prompt_duration,
+            )
             await view.send_and_wait(self.channel)
 
             # get replies
@@ -136,26 +142,26 @@ class ELash(EGameFactory):
                 if safety:
                     # doesn't matter if people picked safety or timeout
                     used_safety.append(pid)
-                    reply = reply + " *(Safety)*"
 
                 p_num = pidmap[pid][game_round]
                 answers[p_num][pid] = reply
+            safety_uses.append(used_safety)
 
         self.logging.info(answers)
 
         # present / vote on answers
-        for index, solutions in answers.items():
+        for i, (index, solutions) in enumerate(answers.items()):
             message, result = await self.vote_on(prompts[index], solutions)
 
             # announce ranking
             await self.announce_ranking(result)
 
-            if used_safety:
+            if safety_uses[i]:
                 # adjust for safeties
-                result = self._adjust_safety(result, used_safety)
+                result = self._adjust_safety(result, safety_uses[i])
 
             # edit vote board
-            await self._modify_vote_board(message, result)
+            await self._modify_vote_board(message, result, safety_uses[i])
 
             # tally scores
             _ = [self._add_score(i[1], i[0]) for i in result]
@@ -163,17 +169,19 @@ class ELash(EGameFactory):
         # print scoreboard
         await self.scoreboard()
 
-    async def _modify_vote_board(self, message, result):
+    async def _modify_vote_board(self, message, result, used_safety):
         """TODO"""
         self.logging.info("Modifying score board")
         embed = message.embeds[0]
 
         for votes, pid, i in result:
             field = embed.fields[i]
+            safety_string = " (safety)" if pid in used_safety else ""
             embed.set_field_at(
                 i,
                 name=f"Total votes: {votes}",
-                value=f"{field.value} -- *{self.players[pid]}*",
+                value=f"{field.value} -- *{self.players[pid].name}* {self._player_symbols[pid]}"
+                + safety_string,
                 inline=False,
             )
 

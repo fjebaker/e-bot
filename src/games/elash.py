@@ -42,8 +42,8 @@ class ELash(EGameFactory):
     game_name = "E Lash"
     game_description = ""
     wait_duration = 5
-    prompt_duration = 30
-    min_players = 1
+    prompt_duration = 60
+    min_players = 2
     cog_help = "TODO"
 
     has_scrape = True
@@ -135,33 +135,28 @@ class ELash(EGameFactory):
             # get replies
             replies: Dict[int, Tuple[str, bool]] = view.responses
 
-            # unpack
-            used_safety = []
             for pid in pids:
                 reply, safety = replies.get(pid, (unique_content[pid][1], True))
-                if safety:
-                    # doesn't matter if people picked safety or timeout
-                    used_safety.append(pid)
-
                 p_num = pidmap[pid][game_round]
-                answers[p_num][pid] = reply
-            safety_uses.append(used_safety)
+                answers[p_num][pid] = (reply, safety)
 
         self.logging.info(answers)
 
         # present / vote on answers
-        for i, (index, solutions) in enumerate(answers.items()):
+        for index, solutions in answers.items():
             message, result = await self.vote_on(prompts[index], solutions)
 
             # announce ranking
             await self.announce_ranking(result)
 
-            if safety_uses[i]:
+            used_safety = [pid for (pid, sol) in solutions.items() if sol[1]]
+
+            if used_safety:
                 # adjust for safeties
-                result = self._adjust_safety(result, safety_uses[i])
+                result = self._adjust_safety(result, used_safety)
 
             # edit vote board
-            await self._modify_vote_board(message, result, safety_uses[i])
+            await self._modify_vote_board(message, result, used_safety)
 
             # tally scores
             _ = [self._add_score(i[1], i[0]) for i in result]
@@ -204,7 +199,7 @@ class ELash(EGameFactory):
         """TODO"""
         # keep immutable copy
         pids = list(solutions.keys())
-        answers = [solutions[k] for k in pids]
+        answers = [solutions[k][0] for k in pids]
 
         # assemble vote card and issue the poll
         embed = self.embed(f"Click to vote:\n**{prompt}**\n")
@@ -214,7 +209,9 @@ class ELash(EGameFactory):
             embed.add_field(name=label, value=ans, inline=False)
             labels.append(label)
 
-        poll = PollView(list(self.players.keys()), embed, labels)
+        poll = PollView(
+            list(self.players.keys()), embed, labels, timeout=self.prompt_duration
+        )
         await poll.send_and_wait(self.channel)
 
         # get the results

@@ -2,16 +2,18 @@ import logging
 import asyncio
 import os
 
+from typing import Dict, Union, List, Tuple
+
 from functools import wraps
 from itertools import count
 from collections import defaultdict
 
 import discord
 
-from utils import dmerge
+from utils import dmerge, random_emoji
 from utils.lookups import EMOJI_FORWARD
 
-from interactive import InteractionPipeline, ChoiceInteraction, ReplyInteraction
+from interactive import InteractionPipeline, ChoiceInteraction, GatherPlayersView
 
 from econfig import PATH_EXTENSION, PLAYER_GATHER_TIMEOUT
 
@@ -40,10 +42,11 @@ class EGameFactory:
         self.logging = logging.getLogger(logger_name)
 
         self.guild = context.guild
-        self.channel = context.channel
+        self.channel: discord.TextChannel = context.channel
 
         # players property
-        self._players = {}  # index by id
+        self._players: Dict[int, discord.User] = {}  # index by id
+        self._player_symbols: Dict[int, str] = {}  # id to emoji
         self._num_players = 0
 
         # set in derived
@@ -90,7 +93,7 @@ class EGameFactory:
         self.state["scores"][pid] += value
 
     @staticmethod
-    def _read_file(path: str) -> str:
+    def _read_file(path: str) -> List[str]:
         """Utility method for reading in scraped files. Scraped files
         are always assumed to be new-line seperated.
 
@@ -109,10 +112,12 @@ class EGameFactory:
         return self._players
 
     @players.setter
-    def players(self, players: dict):
+    def players(self, players: List[Tuple[discord.User, str]]):
         """Players property setter"""
-        self._players = players
-        self._num_players = len(players.keys())
+
+        self._players = {u.id: u for (u, _) in players}
+        self._num_players = len(self._players.keys())
+        self._player_symbols = {u.id: s for (u, s) in players}
 
     async def dm_players(self, content: dict, player_ids: list, ipipeline=None) -> dict:
         """Convenience method to send a message to a list of players.
@@ -140,7 +145,6 @@ class EGameFactory:
 
         tasks = []
         for pid, embed in unique_content.items():
-
             # get dm channel
             dm_channel = self.players[pid].dm_channel
             if not dm_channel:
@@ -180,7 +184,7 @@ class EGameFactory:
         self.logging.info(f"DMing all players in {self.guild}")
         return await self.dm_players(content, self.players.keys(), ipipeline=ipipeline)
 
-    async def _players_prompt(self) -> dict:
+    async def _players_prompt(self) -> List[Tuple[discord.User, str]]:
         """Creates a discord embed menu, which players are told to reply to if they
         want to join the game. Extracts the discord author instance, and returns a
         dictionary mapping:
@@ -189,17 +193,12 @@ class EGameFactory:
 
         :return: Authors indexed by id.
         """
-        embed = self.embed(
-            f"{self.game_description}\n\nReply to this message to join the game."
-        )
 
-        # create reply reaction pipeline
-        ipl = InteractionPipeline(ReplyInteraction())
+        text = f"{self.game_description}\n\nClick to join the game."
+        gather = GatherPlayersView(self.embed(text))
+        await gather.send_and_wait(self.channel)
 
-        response = await ipl.send_and_watch(
-            self.channel, embed, timeout=PLAYER_GATHER_TIMEOUT
-        )
-        return {k: v.author for (k, v) in response["response"]["reply"].items()}
+        return gather.players
 
     async def announce_ranking(self, result: list):
         """Presents the ranking of scores in `results` in a discord embed in the
@@ -208,10 +207,15 @@ class EGameFactory:
         :param result: List of `vote` - `pid` pairs.
         """
         scoreboard = "Scores for this round:\n" + "\n".join(
-            [f"{i[0]} votes for {self.players[i[1]]}" for i in result]
+            [
+                f"{i[0]} votes for {self.players[i[1]].name} {self._player_symbols[i[1]]}"
+                for i in result
+            ]
         )
 
-        await self.channel.send(embed=self.embed(scoreboard))
+        await self.channel.send(
+            embed=self.embed(scoreboard), delete_after=self.wait_duration
+        )
         await asyncio.sleep(self.wait_duration)
 
     async def scoreboard(self):
@@ -279,7 +283,8 @@ class EGameFactory:
         """
         self.logging.info("Calling gather players.")
 
-        self.players = await self._players_prompt()
+        players = await self._players_prompt()
+        self.players = players
 
         self.logging.info(f"number of players {self._num_players}")
 

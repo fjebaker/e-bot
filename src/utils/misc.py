@@ -11,3 +11,11 @@ def dict_reverse_lookup(dictionary: dict, value):
         return next(item_generator)[0]
     else:
         return None
+
+
+def async_context_wrap(ctx, func):
+    async def _callback(*args):
+        # turns out python contextualizes itself???
+        return await func(*args)
+
+    return _callback

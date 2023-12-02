@@ -65,7 +65,6 @@ class InteractionPipeline:
             await update_footer(f"\nTime Remaining: {rt}s")
 
             if streaming:
-
                 # monitor streams
                 async for m in message.channel.history(limit=50):
                     # don't read prior to initial message
@@ -81,7 +80,6 @@ class InteractionPipeline:
                             return {p.name: ret}
 
             if observing:
-
                 # can't reassign to capture, so temp variable
                 current_reference = await message.channel.fetch_message(message.id)
 
@@ -100,7 +98,6 @@ class InteractionPipeline:
         return callback
 
     async def _watch(self, message, timeout: int) -> tuple:
-
         clock = Clock(timeout, self._closure_capture(message))
 
         self.logging.info(f"Monitoring for {timeout}s")
@@ -114,7 +111,6 @@ class InteractionPipeline:
             p_result = await p.finalize(message)
 
             if p_result:
-
                 result[p.name] = p_result
 
         return message, result

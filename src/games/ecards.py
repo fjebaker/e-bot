@@ -176,7 +176,6 @@ class ECards(EGameFactory):
         # pid -> str
         cards_played = {}
         for pid, resp in dm_response.items():
-
             # make sure result is present
             if "choice" in resp.get("response", {}):
                 # invert choices:
@@ -221,7 +220,6 @@ class ECards(EGameFactory):
             winning_card = shuffled_responses[0]
             winning_pid = dict_reverse_lookup(cards_played, winning_card)
             if winning_pid:
-
                 # update message channel with round result
                 await message.edit(
                     embed=self.embed(
@@ -273,7 +271,6 @@ class ECards(EGameFactory):
 
             winning_pid = dict_reverse_lookup(cards_played, winning_card)
             if winning_pid:
-
                 # little pause
                 await asyncio.sleep(self.wait_duration)
 

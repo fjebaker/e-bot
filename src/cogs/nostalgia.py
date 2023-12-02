@@ -7,7 +7,6 @@ from discord.ext import commands
 
 
 class Nostalgia(commands.Cog):
-
     PROMPTS = [
         "Oh that reminds me!",
         "Interesting point but have you ever considered that maybe:",

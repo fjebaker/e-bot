@@ -114,8 +114,8 @@ class RideTheBus(EGameFactory):
     min_players = 1
     cog_help = "TODO"
 
-    def __init__(self, context):
-        super().__init__(context, __name__)
+    def __init__(self, interaction: discord.Interaction):
+        super().__init__(interaction, __name__)
         self.has_scrape = False
 
         # map player id to the cards they currently have

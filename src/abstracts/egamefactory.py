@@ -34,15 +34,15 @@ class EGameFactory:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, context, logger_name: str):
+    def __init__(self, interaction: discord.Interaction, logger_name: str):
         """
         `logger_name` should just be `__name__` of instancing module. Used
         only for logging purposes.
         """
         self.logging = logging.getLogger(logger_name)
 
-        self.guild = context.guild
-        self.channel: discord.TextChannel = context.channel
+        self.guild = interaction.guild
+        self.channel: discord.TextChannel = interaction.channel
 
         # players property
         self._players: Dict[int, discord.User] = {}  # index by id
@@ -252,13 +252,13 @@ class EGameFactory:
         ...
 
     # override
-    async def scrape(self, context) -> str:
+    async def scrape(self, interaction: discord.Interaction) -> str:
         # pylint: disable=unused-argument
         ...
 
-    async def _scrape_channel(self, context, channel_name: str, file_name: str) -> int:
+    async def _scrape_channel(self, interaction: discord.Interaction, channel_name: str, file_name: str) -> int:
         """TODO"""
-        channel = next(filter(lambda c: c.name == channel_name, context.guild.channels))
+        channel = next(filter(lambda c: c.name == channel_name, interaction.guild.channels))
 
         message_contents = []
 
@@ -267,7 +267,7 @@ class EGameFactory:
                 message_contents.append(replace_rules(message.content))
             except Exception as e:
                 self.logging.error(
-                    f"Scraping error on {channel_name} in {context.guild.id}: {e}"
+                    f"Scraping error on {channel_name} in {interaction.guild.id}: {e}"
                 )
                 return f"Scraping error {e}."
 

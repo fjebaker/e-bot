@@ -99,19 +99,20 @@ class GuildDispatch(commands.Cog):
 
         return FactoryTask(instance, future)
 
-    async def _start(self, context, factory):
+    async def _start(self, interaction: discord.Interaction, factory):
         """Obtains the factory instance from `self.lookup` of Guild ID `gid`, and calls
         :func:`abstracts.egamefactory.EGameFactory.gather_players`.
         If `factory.min_players` is met, calls :func:`abstracts.egame.EGame.start`.
         """
-        gid = context.guild.id
+        gid = interaction.guild.id
 
         # gather players
-        instance = factory(context)
+        instance = factory(interaction)
+        await interaction.response.send_message(f"Starting {instance.game_name}!")
         player_count = await instance.gather_players()
 
         if player_count < instance.min_players:
-            await context.channel.send(
+            await interaction.channel.send(
                 embed=self.embed(
                     f"Too few players to start game. Requires at least {factory.min_players}."
                 )
@@ -143,33 +144,33 @@ class GuildDispatch(commands.Cog):
 
         return _callback
 
-    async def _entry(self, context, cmd: str, factory):
+    async def _entry(self, interaction: discord.Interaction, cmd: str, factory):
         """Cog command entry function, to be called from the derived class. Handles command
         and contexts.
         """
         self.logging.info(
-            f"entry called for {factory} with {cmd} from guild {context.guild.name}"
+            f"entry called for {factory} with {cmd} from guild {interaction.guild.name}"
         )
 
-        gid = context.guild.id
+        gid = interaction.guild.id
 
         if cmd == "stop":
             if gid in self.lookup:
                 # stop game
                 self._stop(gid)
-                return await context.send(embed=self.embed("Stopped running game."))
+                return await interaction.response.send_message(embed=self.embed("Stopped running game."))
             else:
-                return await context.send(embed=self.embed("No game running."))
+                return await interaction.response.send_message(embed=self.embed("No game running."))
 
         elif cmd == "start":
             if gid in self.lookup:
-                return await context.send(
+                return await interaction.response.send_message(
                     embed=self.embed("A game is already running on this server.")
                 )
 
             else:
                 # start game
-                return await self._start(context, factory)
+                return await self._start(interaction, factory)
 
         elif cmd == "scrape":
             if factory.has_scrape:
@@ -177,19 +178,19 @@ class GuildDispatch(commands.Cog):
                 if gid in self.lookup:
                     instance = self.lookup[gid].instance
                 else:
-                    instance = factory(context)
+                    instance = factory(interaction)
 
-                status = await instance.scrape(context)
-                return await context.send(embed=self.embed(status))
+                status = await instance.scrape(interaction)
+                return await interaction.response.send_message(embed=self.embed(status))
 
             else:
-                return await context.send(
+                return await interaction.response.send_message(
                     embed=self.embed("Does not require scraping.")
                 )
 
         else:
             # catch all
-            await context.send(embed=self.embed("Unknown command."))
+            await interaction.response.send_message(embed=self.embed("Unknown command."))
 
     async def cog_command_error(self, context, error):
         # pylint: disable=arguments-renamed

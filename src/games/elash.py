@@ -53,8 +53,8 @@ class ELash(EGameFactory):
     channel_prompts = "elash-prompts"
     channel_safeties = "elash-safeties"
 
-    def __init__(self, context):
-        super().__init__(context, __name__)
+    def __init__(self, interaction: discord.Interaction):
+        super().__init__(interaction, __name__)
 
         self.prompts = None
         self.safeties = None
@@ -223,14 +223,14 @@ class ELash(EGameFactory):
 
         return poll.message, result
 
-    async def scrape(self, context) -> str:
+    async def scrape(self, interaction: discord.Interaction) -> str:
         """TODO"""
 
         num_prompts = await self._scrape_channel(
-            context, self.channel_prompts, self.file_prompts
+            interaction, self.channel_prompts, self.file_prompts
         )
         num_safeties = await self._scrape_channel(
-            context, self.channel_safeties, self.file_safeties
+            interaction, self.channel_safeties, self.file_safeties
         )
 
         return f"Scraped {num_prompts} prompts, and {num_safeties} safeties."

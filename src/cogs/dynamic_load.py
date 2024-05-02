@@ -6,6 +6,9 @@ from discord.ext import commands
 
 COG_HELP = """TODO: help"""
 
+async def _entry_autocomplete(interaction: discord.Interaction, current: str):
+    basic_options = ["all", "list", "tree", "gtree"]
+    return [app_commands.Choice(name=item, value=item) for item in basic_options if current in item]
 
 class DynamicLoad(commands.Cog):
     def __init__(self, bot):
@@ -59,7 +62,8 @@ class DynamicLoad(commands.Cog):
         ret = "\n".join(f"- {i}" for i in input_list)
         return f"```\n{ret}\n```"
 
-    @commands.command(name="dloader")
+    @commands.hybrid_command(name="dloader")
+    @app_commands.autocomplete(cog_name=_entry_autocomplete)
     async def entry(self, context, cog_name: str):
         self.logging.info(f"entry called with {cog_name}")
 

@@ -10,6 +10,7 @@ test = "pytest -vvv"
 
 [packages]
 discord = "2.3.2"
+emoji = "*"
 
 [dev-packages]
 black = "*"

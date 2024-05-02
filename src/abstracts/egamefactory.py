@@ -9,6 +9,7 @@ from itertools import count
 from collections import defaultdict
 
 import discord
+from discord.app_commands import Choice
 
 from utils import dmerge, random_emoji
 from utils.lookups import EMOJI_FORWARD
@@ -86,6 +87,15 @@ class EGameFactory:
             colour=colour,
             **kwargs,
         )
+
+    @classmethod
+    def choices(cls):
+        command_names = [
+            "start",
+            "stop",
+            "scrape" if cls.has_scrape else None
+        ]
+        return [Choice(name=name, value=name) for name in command_names if name is not None]
 
     def _add_score(self, pid: int, value: int):
         """TODO"""

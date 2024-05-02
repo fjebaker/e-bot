@@ -20,14 +20,17 @@ class EGameDispatch(GuildDispatch):
         super().__init__(bot, __name__)
 
     @app_commands.command(name="elash")
+    @app_commands.choices(cmd=ELash.choices())
     async def elash(self, interaction: discord.Interaction, cmd: str):
         await self._entry(interaction, cmd, ELash)
 
     @app_commands.command(name="ecards")
+    @app_commands.choices(cmd=ECards.choices())
     async def ecards(self, interaction: discord.Interaction, cmd: str):
         await self._entry(interaction, cmd, ECards)
 
     @app_commands.command(name="ridethebus")
+    @app_commands.choices(cmd=RideTheBus.choices())
     async def ridethebus(self, interaction: discord.Interaction, cmd: str):
         await self._entry(interaction, cmd, RideTheBus)
 

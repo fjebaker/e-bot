@@ -113,6 +113,7 @@ class RideTheBus(EGameFactory):
     wait_duration = 7
     min_players = 1
     cog_help = "TODO"
+    has_scrape = False
 
     def __init__(self, interaction: discord.Interaction):
         super().__init__(interaction, __name__)

@@ -9,7 +9,7 @@ lint = "pylint"
 test = "pytest -vvv"
 
 [packages]
-discord = "*"
+discord = "2.3.2"
 
 [dev-packages]
 black = "*"
@@ -23,7 +23,7 @@ coverage = "*"
 Sphinx = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10.12"
 
 [pipenv]
 allow_prereleases = true

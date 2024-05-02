@@ -9,7 +9,7 @@ lint = "pylint"
 test = "pytest -vvv"
 
 [packages]
-discord = "2.3.2"
+discord = "*"
 emoji = "*"
 
 [dev-packages]
@@ -24,7 +24,7 @@ coverage = "*"
 Sphinx = "*"
 
 [requires]
-python_version = "3.10.12"
+python_version = "*"
 
 [pipenv]
 allow_prereleases = true

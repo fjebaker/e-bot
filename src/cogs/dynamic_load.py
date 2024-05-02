@@ -82,6 +82,15 @@ class DynamicLoad(commands.Cog):
                 self.logging.info(f"User {context.message.author.id} tried to sync the tree")
                 await context.send("You don't have permission to do that :(")
 
+        elif cog_name == "gtree":
+            if (str(context.message.author.id) == self.bot.admin_user):
+                await self.bot.tree.sync()
+                self.logging.info("Tree synced!")
+                await context.send("Tree synced!")
+            else:
+                self.logging.info(f"User {context.message.author.id} tried to sync the global tree")
+                await context.send("You don't have permission to do that :(")
+
         elif cog_name == __name__:
             await context.send("Cannot act on self-cog.")
 

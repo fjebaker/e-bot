@@ -10,6 +10,7 @@ test = "pytest -vvv"
 
 [packages]
 discord = "*"
+emoji = "*"
 
 [dev-packages]
 black = "*"
@@ -23,7 +24,7 @@ coverage = "*"
 Sphinx = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "*"
 
 [pipenv]
 allow_prereleases = true

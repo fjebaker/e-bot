@@ -15,7 +15,7 @@ from utils.lookups import EMOJI_FORWARD
 
 from interactive import InteractionPipeline, ChoiceInteraction, GatherPlayersView
 
-from econfig import PATH_EXTENSION, PLAYER_GATHER_TIMEOUT
+from econfig import PATH_EXTENSION, PLAYER_GATHER_TIMEOUT, SCRAPE_MAXIMUM
 
 
 def replace_rules(content: str) -> str:
@@ -262,7 +262,7 @@ class EGameFactory:
 
         message_contents = []
 
-        async for message in channel.history(limit=1000):
+        async for message in channel.history(limit=SCRAPE_MAXIMUM):
             try:
                 message_contents.append(replace_rules(message.content))
             except Exception as e:

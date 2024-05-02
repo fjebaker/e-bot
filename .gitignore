@@ -131,5 +131,7 @@ dmypy.json
 
 # Custom
 secrets
+data/elash_prompts_*.txt
+data/elash_safeties_*.txt
 
 .pdm-python

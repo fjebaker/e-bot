@@ -1,5 +1,7 @@
 import logging
 
+import discord
+from discord import app_commands
 from discord.ext import commands
 
 COG_HELP = """TODO: help"""
@@ -63,17 +65,29 @@ class DynamicLoad(commands.Cog):
 
         if cog_name == "all":
             reloaded = self._fmt_cog_list(await self._reload_all_cogs())
+            self.logging.info(f"Reloaded\n{reloaded}.")
             await context.send(f"Reloaded\n{reloaded}")
 
         elif cog_name == "list":
             resp = self._fmt_cog_list(self.bot.extensions.keys())
             await context.send(f"Cogs currently loaded:\n{resp}")
 
+        elif cog_name == "tree":
+            if (str(context.message.author.id) == self.bot.admin_user):
+                self.bot.tree.copy_global_to(guild = context.guild)
+                await self.bot.tree.sync(guild = context.guild)
+                self.logging.info("Tree synced!")
+                await context.send("Tree synced!")
+            else:
+                self.logging.info(f"User {context.message.author.id} tried to sync the tree")
+                await context.send("You don't have permission to do that :(")
+
         elif cog_name == __name__:
             await context.send("Cannot act on self-cog.")
 
         else:
             resp = await self._reload_cog(cog_name)
+            self.logging.info(resp)
             await context.send(resp)
 
     async def cog_command_error(self, context, error):

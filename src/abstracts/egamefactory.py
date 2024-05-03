@@ -33,6 +33,8 @@ class EGameFactory:
     such as polling, player and context management, scores, etc.
     """
 
+    has_scrape = None
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, interaction: discord.Interaction, logger_name: str):

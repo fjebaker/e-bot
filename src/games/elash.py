@@ -2,16 +2,11 @@ import itertools
 import random
 import collections
 
-from typing import Dict, Union, Tuple
+from typing import Dict, Tuple
 
 from abstracts import EGameFactory
 
-from utils.lookups import EMOJI_FORWARD
 from interactive import (
-    InteractionPipeline,
-    MessageInteraction,
-    ButtonInteraction,
-    ChoiceInteraction,
     UserUniqueView,
     PollView,
 )
@@ -113,7 +108,6 @@ class ELash(EGameFactory):
         # create a data structure to hold the results
         answers = collections.defaultdict(dict)
 
-        safety_uses = []
         # will map prompt_id -> {pid -> answer}
         for game_round in range(2):
             # generate unique content to send to players

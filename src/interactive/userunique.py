@@ -1,6 +1,6 @@
 import logging
 
-from typing import Coroutine, Dict, Tuple
+from typing import Dict, Tuple
 
 import discord
 

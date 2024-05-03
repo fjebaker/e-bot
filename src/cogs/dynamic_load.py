@@ -6,6 +6,7 @@ from discord.ext import commands
 
 COG_HELP = """TODO: help"""
 
+# pylint: disable_next=unused-argument
 async def _entry_autocomplete(interaction: discord.Interaction, current: str):
     basic_options = ["all", "list", "tree", "gtree"]
     return [app_commands.Choice(name=item, value=item) for item in basic_options if current in item]
@@ -77,9 +78,9 @@ class DynamicLoad(commands.Cog):
             await context.send(f"Cogs currently loaded:\n{resp}")
 
         elif cog_name == "tree":
-            if (context.message.author.id in self.bot.admin_users):
-                self.bot.tree.copy_global_to(guild = context.guild)
-                await self.bot.tree.sync(guild = context.guild)
+            if context.message.author.id in self.bot.admin_users:
+                self.bot.tree.copy_global_to(guild=context.guild)
+                await self.bot.tree.sync(guild=context.guild)
                 self.logging.info("Tree synced!")
                 await context.send("Tree synced!")
             else:
@@ -87,7 +88,7 @@ class DynamicLoad(commands.Cog):
                 await context.send("You don't have permission to do that :(")
 
         elif cog_name == "gtree":
-            if (context.message.author.id in self.bot.admin_users):
+            if context.message.author.id in self.bot.admin_users:
                 await self.bot.tree.sync()
                 self.logging.info("Tree synced!")
                 await context.send("Tree synced!")

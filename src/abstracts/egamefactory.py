@@ -2,7 +2,7 @@ import logging
 import asyncio
 import os
 
-from typing import Dict, Union, List, Tuple
+from typing import Dict, List, Tuple
 
 from functools import wraps
 from itertools import count
@@ -11,12 +11,12 @@ from collections import defaultdict
 import discord
 from discord.app_commands import Choice
 
-from utils import dmerge, random_emoji
+from utils import dmerge
 from utils.lookups import EMOJI_FORWARD
 
 from interactive import InteractionPipeline, ChoiceInteraction, GatherPlayersView
 
-from econfig import PATH_EXTENSION, PLAYER_GATHER_TIMEOUT, SCRAPE_MAXIMUM
+from econfig import PATH_EXTENSION, SCRAPE_MAXIMUM
 
 
 def replace_rules(content: str) -> str:

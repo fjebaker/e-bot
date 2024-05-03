@@ -36,7 +36,7 @@ class TimedView(discord.ui.View):
         await self.message.edit(view=None)
         await self.on_timeout()
 
-        if self.delete_after == True:
+        if self.delete_after is True:
             await self.message.delete()
 
     async def update_text(self, s: str):

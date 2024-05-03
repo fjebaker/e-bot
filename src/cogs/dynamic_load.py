@@ -7,7 +7,7 @@ from discord.ext import commands
 COG_HELP = """TODO: help"""
 
 
-async def _entry_autocomplete(interaction: discord.Interaction, current: str): # pylint: disable=unused-argument
+async def _entry_autocomplete(interaction: discord.Interaction, current: str):  # pylint: disable=unused-argument
     basic_options = ["all", "list", "tree", "gtree"]
     return [app_commands.Choice(name=item, value=item) for item in basic_options if current in item]
 

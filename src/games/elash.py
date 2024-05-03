@@ -4,14 +4,14 @@ import collections
 
 from typing import Dict, Tuple
 
+import discord
+
 from abstracts import EGameFactory
 
 from interactive import (
     UserUniqueView,
     PollView,
 )
-
-import discord
 
 
 def randomize_prompts(prompts: list) -> list:

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class PromptModal(discord.ui.Modal, title="e-bot"):
     response = discord.ui.TextInput(label="Answer")
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction):  # pylint: disable=arguments-differ
         self.stop()
         self.interaction = interaction
         self.answer = self.response.value
@@ -88,7 +88,7 @@ class UserUniqueView(TimedView):
         btn.callback = async_context_wrap(self, self.user_input)
         self.add_item(btn)
 
-    async def interaction_check(self, interaction: discord.Interaction):
+    async def interaction_check(self, interaction: discord.Interaction):  # pylint: disable=arguments-differ
         uid = interaction.user.id
         if uid in self.responses or uid in self.interacted:
             logger.info("User %s has already respondend", interaction.user.name)

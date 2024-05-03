@@ -77,7 +77,7 @@ class DynamicLoad(commands.Cog):
             await context.send(f"Cogs currently loaded:\n{resp}")
 
         elif cog_name == "tree":
-            if (str(context.message.author.id) == self.bot.admin_user):
+            if (context.message.author.id in self.bot.admin_users):
                 self.bot.tree.copy_global_to(guild = context.guild)
                 await self.bot.tree.sync(guild = context.guild)
                 self.logging.info("Tree synced!")
@@ -87,7 +87,7 @@ class DynamicLoad(commands.Cog):
                 await context.send("You don't have permission to do that :(")
 
         elif cog_name == "gtree":
-            if (str(context.message.author.id) == self.bot.admin_user):
+            if (context.message.author.id in self.bot.admin_users):
                 await self.bot.tree.sync()
                 self.logging.info("Tree synced!")
                 await context.send("Tree synced!")

@@ -10,7 +10,7 @@ COG_HELP = """TODO: help"""
 async def _entry_autocomplete(
     interaction: discord.Interaction, current: str
 ):  # pylint: disable=unused-argument
-    basic_options = ["all", "list", "tree", "gtree"]
+    basic_options = ["all", "list", "guildtree", "globaltree"]
     return [
         app_commands.Choice(name=item, value=item)
         for item in basic_options
@@ -84,23 +84,23 @@ class DynamicLoad(commands.Cog):
             resp = self._fmt_cog_list(self.bot.extensions.keys())
             await context.send(f"Cogs currently loaded:\n{resp}")
 
-        elif cog_name == "tree":
+        elif cog_name == "guildtree":
             if context.message.author.id in self.bot.admin_users:
                 self.bot.tree.copy_global_to(guild=context.guild)
                 await self.bot.tree.sync(guild=context.guild)
-                self.logging.info("Tree synced!")
-                await context.send("Tree synced!")
+                self.logging.info("Guild tree synced!")
+                await context.send("Guild tree synced!")
             else:
                 self.logging.info(
                     f"User {context.message.author.id} tried to sync the tree"
                 )
                 await context.send("You don't have permission to do that :(")
 
-        elif cog_name == "gtree":
+        elif cog_name == "globaltree":
             if context.message.author.id in self.bot.admin_users:
                 await self.bot.tree.sync()
-                self.logging.info("Tree synced!")
-                await context.send("Tree synced!")
+                self.logging.info("Global tree synced!")
+                await context.send("Global tree synced!")
             else:
                 self.logging.info(
                     f"User {context.message.author.id} tried to sync the global tree"

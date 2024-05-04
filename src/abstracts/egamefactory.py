@@ -36,7 +36,6 @@ class EGameFactory:
 
     has_scrape = None
 
-
     def __init__(self, interaction: discord.Interaction, logger_name: str):
         """
         `logger_name` should just be `__name__` of instancing module. Used

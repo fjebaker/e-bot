@@ -10,7 +10,7 @@ import cogs
 class EBot(commands.Bot):
     """TODO"""
 
-    def __init__(self, admin_users):
+    def __init__(self, admin_users: list[int]):
         # pylint: disable=assigning-non-slot
         intents = discord.Intents.default()
         intents.message_content = True

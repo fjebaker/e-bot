@@ -158,9 +158,13 @@ class GuildDispatch(commands.Cog):
             if gid in self.lookup:
                 # stop game
                 self._stop(gid)
-                return await interaction.response.send_message(embed=self.embed("Stopped running game."))
+                return await interaction.response.send_message(
+                    embed=self.embed("Stopped running game.")
+                )
             else:
-                return await interaction.response.send_message(embed=self.embed("No game running."))
+                return await interaction.response.send_message(
+                    embed=self.embed("No game running.")
+                )
 
         elif cmd == "start":
             if gid in self.lookup:
@@ -190,7 +194,9 @@ class GuildDispatch(commands.Cog):
 
         else:
             # catch all
-            await interaction.response.send_message(embed=self.embed("Unknown command."))
+            await interaction.response.send_message(
+                embed=self.embed("Unknown command.")
+            )
 
     async def cog_command_error(self, context, error):
         # pylint: disable=arguments-renamed

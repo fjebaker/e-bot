@@ -7,9 +7,15 @@ from discord.ext import commands
 COG_HELP = """TODO: help"""
 
 
-async def _entry_autocomplete(interaction: discord.Interaction, current: str):  # pylint: disable=unused-argument
+async def _entry_autocomplete(
+    interaction: discord.Interaction, current: str
+):  # pylint: disable=unused-argument
     basic_options = ["all", "list", "tree", "gtree"]
-    return [app_commands.Choice(name=item, value=item) for item in basic_options if current in item]
+    return [
+        app_commands.Choice(name=item, value=item)
+        for item in basic_options
+        if current in item
+    ]
 
 
 class DynamicLoad(commands.Cog):
@@ -85,7 +91,9 @@ class DynamicLoad(commands.Cog):
                 self.logging.info("Tree synced!")
                 await context.send("Tree synced!")
             else:
-                self.logging.info(f"User {context.message.author.id} tried to sync the tree")
+                self.logging.info(
+                    f"User {context.message.author.id} tried to sync the tree"
+                )
                 await context.send("You don't have permission to do that :(")
 
         elif cog_name == "gtree":
@@ -94,7 +102,9 @@ class DynamicLoad(commands.Cog):
                 self.logging.info("Tree synced!")
                 await context.send("Tree synced!")
             else:
-                self.logging.info(f"User {context.message.author.id} tried to sync the global tree")
+                self.logging.info(
+                    f"User {context.message.author.id} tried to sync the global tree"
+                )
                 await context.send("You don't have permission to do that :(")
 
         elif cog_name == __name__:

@@ -12,6 +12,7 @@ class Monitor:
             return ""
 
     def reset(self):
+        # pylint: disable=unused-argument
         ...
 
     def format(self, embed: discord.Embed) -> discord.Embed:

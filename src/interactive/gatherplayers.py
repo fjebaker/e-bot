@@ -26,7 +26,9 @@ class GatherPlayersView(TimedView):
         )
         await self.update_text(text)
 
-    async def interaction_check(self, interaction: discord.Interaction):  # pylint: disable=arguments-differ
+    async def interaction_check(
+        self, interaction: discord.Interaction
+    ):  # pylint: disable=arguments-differ
         # don't let users with the same id interact twice
         is_playing = any((i.id == interaction.user.id for (i, _) in self.players))
 

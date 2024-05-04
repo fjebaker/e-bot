@@ -199,7 +199,7 @@ class ELash(EGameFactory):
         embed = self.embed(f"Click to vote:\n**{prompt}**\n")
         labels = []
         for i, ans in enumerate(answers):
-            label = f"{i+1}"
+            label = f"{i + 1}"
             embed.add_field(name=label, value=ans, inline=False)
             labels.append(label)
 

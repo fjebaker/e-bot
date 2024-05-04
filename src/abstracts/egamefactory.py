@@ -1,3 +1,4 @@
+# pylint: disable=too-many-instance-attributes
 import logging
 import asyncio
 import os
@@ -35,7 +36,6 @@ class EGameFactory:
 
     has_scrape = None
 
-    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, interaction: discord.Interaction, logger_name: str):
         """
@@ -92,12 +92,10 @@ class EGameFactory:
 
     @classmethod
     def choices(cls):
-        command_names = [
-            "start",
-            "stop",
-            "scrape" if cls.has_scrape else None
+        command_names = ["start", "stop", "scrape" if cls.has_scrape else None]
+        return [
+            Choice(name=name, value=name) for name in command_names if name is not None
         ]
-        return [Choice(name=name, value=name) for name in command_names if name is not None]
 
     def _add_score(self, pid: int, value: int):
         """TODO"""
@@ -241,7 +239,7 @@ class EGameFactory:
             reverse=True,
         )
         scoreboard = [
-            f"{i+1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)
+            f"{i + 1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)
         ]
 
         em = self.embed("**Global Scores:**\n" + "\n".join(scoreboard))
@@ -268,9 +266,13 @@ class EGameFactory:
         # pylint: disable=unused-argument
         ...
 
-    async def _scrape_channel(self, interaction: discord.Interaction, channel_name: str, file_name: str) -> int:
+    async def _scrape_channel(
+        self, interaction: discord.Interaction, channel_name: str, file_name: str
+    ) -> int:
         """TODO"""
-        channel = next(filter(lambda c: c.name == channel_name, interaction.guild.channels))
+        channel = next(
+            filter(lambda c: c.name == channel_name, interaction.guild.channels)
+        )
 
         message_contents = []
 
@@ -366,7 +368,7 @@ class EGameFactory:
 
         def decorator(func):
             if max_rounds == 0 and not prompt_continue:
-                raise Exception(
+                raise ValueError(
                     "Cannot call execute_rounds with max_rounds=-1 and prompt_continue=False - doing so would lead to infinite loop."
                 )
 

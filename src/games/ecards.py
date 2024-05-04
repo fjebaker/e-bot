@@ -140,11 +140,13 @@ class ECards(EGameFactory):
 
         # construct content
         content_dict = {
-            pid: self.embed(
-                f"This round's prompt: {prompt}\nYou're the leader for this round - sit back and relax!"
+            pid: (
+                self.embed(
+                    f"This round's prompt: {prompt}\nYou're the leader for this round - sit back and relax!"
+                )
+                if pid == leader
+                else self.embed(f"**{prompt}**")
             )
-            if pid == leader
-            else self.embed(f"**{prompt}**")
             for pid in pids
         }
 

@@ -14,6 +14,7 @@ def dict_reverse_lookup(dictionary: dict, value):
 
 
 def async_context_wrap(ctx, func):
+    # pylint: disable=unused-argument
     async def _callback(*args):
         # turns out python contextualizes itself???
         return await func(*args)

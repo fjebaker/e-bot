@@ -66,7 +66,9 @@ class PollView(TimedView):
 
         self.check_continue()
 
-    async def interaction_check(self, interaction: discord.Interaction):  # pylint: disable=arguments-differ
+    async def interaction_check(
+        self, interaction: discord.Interaction
+    ):  # pylint: disable=arguments-differ
         uid = interaction.user.id
         if uid in self.whitelist and uid not in self.voted:
             self.voted.append(uid)

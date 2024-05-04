@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-cov pytest-asyncio discord chatgpt
+        pip install pytest pytest-cov pytest-asyncio discord chatgpt emoji
 
     - name: Run unit tests
       run: |

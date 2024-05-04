@@ -1,6 +1,7 @@
 """
 Helper class for standard 52 french deck playing cards.
 """
+
 import itertools
 import functools
 import random

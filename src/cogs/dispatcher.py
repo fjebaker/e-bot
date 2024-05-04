@@ -1,4 +1,5 @@
-from discord.ext import commands
+import discord
+from discord import app_commands
 
 from games.elash import ELash
 from games.ecards import ECards
@@ -18,20 +19,23 @@ class EGameDispatch(GuildDispatch):
     def __init__(self, bot):
         super().__init__(bot, __name__)
 
-    @commands.command(name="elash")
-    async def elash(self, context, cmd: str):
-        await self._entry(context, cmd, ELash)
+    @app_commands.command(name="elash")
+    @app_commands.choices(cmd=ELash.choices())
+    async def elash(self, interaction: discord.Interaction, cmd: str):
+        await self._entry(interaction, cmd, ELash)
 
-    @commands.command(name="ecards")
-    async def ecards(self, context, cmd: str):
-        await self._entry(context, cmd, ECards)
+    @app_commands.command(name="ecards")
+    @app_commands.choices(cmd=ECards.choices())
+    async def ecards(self, interaction: discord.Interaction, cmd: str):
+        await self._entry(interaction, cmd, ECards)
 
-    @commands.command(name="ridethebus")
-    async def ridethebus(self, context, cmd: str):
-        await self._entry(context, cmd, RideTheBus)
+    @app_commands.command(name="ridethebus")
+    @app_commands.choices(cmd=RideTheBus.choices())
+    async def ridethebus(self, interaction: discord.Interaction, cmd: str):
+        await self._entry(interaction, cmd, RideTheBus)
 
-    # @commands.command(name="test")
-    # async def test(self, context):
+    # @app_commands.command(name="test")
+    # async def test(self, interaction: discord.Interaction):
     #     ...
 
 

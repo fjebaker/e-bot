@@ -1,6 +1,6 @@
 import logging
 
-from typing import Coroutine, Dict, Tuple
+from typing import Dict, Tuple
 
 import discord
 
@@ -15,6 +15,7 @@ class PromptModal(discord.ui.Modal, title="e-bot"):
     response = discord.ui.TextInput(label="Answer")
 
     async def on_submit(self, interaction: discord.Interaction):
+        # pylint: disable=arguments-differ,attribute-defined-outside-init
         self.stop()
         self.interaction = interaction
         self.answer = self.response.value
@@ -40,6 +41,7 @@ class UserPrompt(discord.ui.View):
         style=discord.ButtonStyle.blurple,
     )
     async def safety(self, interaction: discord.Interaction, button):
+        # pylint: disable=unused-argument
         self.outcome = None
         await self.resolve(interaction.message, interaction)
 
@@ -57,6 +59,7 @@ class UserPrompt(discord.ui.View):
         self.used_default = True
 
     async def resolve(self, message: discord.Message, interaction: discord.Interaction):
+        # pylint: disable=fixme,unused-argument
         # TODO: want to be able to delete old messages
         # but this doesn't work :/
         # await message.delete()
@@ -88,7 +91,9 @@ class UserUniqueView(TimedView):
         btn.callback = async_context_wrap(self, self.user_input)
         self.add_item(btn)
 
-    async def interaction_check(self, interaction: discord.Interaction):
+    async def interaction_check(
+        self, interaction: discord.Interaction
+    ):  # pylint: disable=arguments-differ
         uid = interaction.user.id
         if uid in self.responses or uid in self.interacted:
             logger.info("User %s has already respondend", interaction.user.name)

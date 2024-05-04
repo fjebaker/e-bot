@@ -10,7 +10,7 @@ import cogs
 class EBot(commands.Bot):
     """TODO"""
 
-    def __init__(self):
+    def __init__(self, admin_users: list[int]):
         # pylint: disable=assigning-non-slot
         intents = discord.Intents.default()
         intents.message_content = True
@@ -20,6 +20,7 @@ class EBot(commands.Bot):
             intents=intents,
         )
         self.logging = logging.getLogger(__name__)
+        self.admin_users = admin_users
 
     async def load_all_available_cogs(self):
         """TODO"""

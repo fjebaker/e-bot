@@ -1,9 +1,9 @@
+import discord
+
 from interactive.timedview import TimedView
 
 from econfig import PLAYER_GATHER_TIMEOUT
 from utils import random_emoji, async_context_wrap
-
-import discord
 
 
 class GatherPlayersView(TimedView):
@@ -26,15 +26,16 @@ class GatherPlayersView(TimedView):
         )
         await self.update_text(text)
 
-    async def interaction_check(self, interaction: discord.Interaction):
+    async def interaction_check(
+        self, interaction: discord.Interaction
+    ):  # pylint: disable=arguments-differ
         # don't let users with the same id interact twice
         is_playing = any((i.id == interaction.user.id for (i, _) in self.players))
 
         if is_playing:
             # let the player know they have already joined
-            username = interaction.user.name
             await interaction.response.send_message(
-                f"You have already joined.",
+                "You have already joined.",
                 ephemeral=True,
                 delete_after=self.time,
             )

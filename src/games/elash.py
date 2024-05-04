@@ -2,21 +2,16 @@ import itertools
 import random
 import collections
 
-from typing import Dict, Union, Tuple
+from typing import Dict, Tuple
+
+import discord
 
 from abstracts import EGameFactory
 
-from utils.lookups import EMOJI_FORWARD
 from interactive import (
-    InteractionPipeline,
-    MessageInteraction,
-    ButtonInteraction,
-    ChoiceInteraction,
     UserUniqueView,
     PollView,
 )
-
-import discord
 
 
 def randomize_prompts(prompts: list) -> list:
@@ -53,8 +48,8 @@ class ELash(EGameFactory):
     channel_prompts = "elash-prompts"
     channel_safeties = "elash-safeties"
 
-    def __init__(self, context):
-        super().__init__(context, __name__)
+    def __init__(self, interaction: discord.Interaction):
+        super().__init__(interaction, __name__)
 
         self.prompts = None
         self.safeties = None
@@ -113,7 +108,6 @@ class ELash(EGameFactory):
         # create a data structure to hold the results
         answers = collections.defaultdict(dict)
 
-        safety_uses = []
         # will map prompt_id -> {pid -> answer}
         for game_round in range(2):
             # generate unique content to send to players
@@ -205,7 +199,7 @@ class ELash(EGameFactory):
         embed = self.embed(f"Click to vote:\n**{prompt}**\n")
         labels = []
         for i, ans in enumerate(answers):
-            label = f"{i+1}"
+            label = f"{i + 1}"
             embed.add_field(name=label, value=ans, inline=False)
             labels.append(label)
 
@@ -223,14 +217,14 @@ class ELash(EGameFactory):
 
         return poll.message, result
 
-    async def scrape(self, context) -> str:
+    async def scrape(self, interaction: discord.Interaction) -> str:
         """TODO"""
 
         num_prompts = await self._scrape_channel(
-            context, self.channel_prompts, self.file_prompts
+            interaction, self.channel_prompts, self.file_prompts
         )
         num_safeties = await self._scrape_channel(
-            context, self.channel_safeties, self.file_safeties
+            interaction, self.channel_safeties, self.file_safeties
         )
 
         return f"Scraped {num_prompts} prompts, and {num_safeties} safeties."

@@ -102,8 +102,7 @@ class CardPyramid:
     def __iter__(self):
         self._current_pos = 0
         self.current_row = 1
-        for c in itertools.chain(*self._cards):
-            yield c
+        yield from itertools.chain(*self._cards)
 
 
 class RideTheBus(EGameFactory):
@@ -113,9 +112,10 @@ class RideTheBus(EGameFactory):
     wait_duration = 7
     min_players = 1
     cog_help = "TODO"
+    has_scrape = False
 
-    def __init__(self, context):
-        super().__init__(context, __name__)
+    def __init__(self, interaction: discord.Interaction):
+        super().__init__(interaction, __name__)
         self.has_scrape = False
 
         # map player id to the cards they currently have

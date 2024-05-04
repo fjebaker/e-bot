@@ -3,10 +3,10 @@ from typing import List
 
 import discord
 from interactive.timedview import TimedView
+from interactive.monitor import Monitor
 
 from utils.lookups import EMOJI_FORWARD, EMOJI_BACKWARD, random_emoji
 from utils import async_context_wrap
-from interactive.monitor import Monitor
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,9 @@ class PollView(TimedView):
 
         self.check_continue()
 
-    async def interaction_check(self, interaction: discord.Interaction):
+    async def interaction_check(
+        self, interaction: discord.Interaction
+    ):  # pylint: disable=arguments-differ
         uid = interaction.user.id
         if uid in self.whitelist and uid not in self.voted:
             self.voted.append(uid)

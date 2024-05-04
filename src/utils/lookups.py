@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+
 import logging
 import random
 
@@ -33,7 +35,7 @@ def random_emoji():
         string = random.choice(EMOJI_UNSORTED)
         try:
             em = emoji.emojize(string)
-        except Exception as e:
+        except Exception:
             logger.warning("%s does not map to an emoji", string)
         else:
             return em

@@ -3,8 +3,6 @@ import logging
 from utils.lookups import EMOJI_FORWARD
 from interactive.monitor import Monitor
 
-import discord
-
 
 class ReplyInteraction(Monitor):
     name = "reply"

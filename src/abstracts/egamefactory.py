@@ -1,21 +1,23 @@
+# pylint: disable=too-many-instance-attributes
 import logging
 import asyncio
 import os
 
-from typing import Dict, Union, List, Tuple
+from typing import Dict, List, Tuple
 
 from functools import wraps
 from itertools import count
 from collections import defaultdict
 
 import discord
+from discord.app_commands import Choice
 
-from utils import dmerge, random_emoji
+from utils import dmerge
 from utils.lookups import EMOJI_FORWARD
 
 from interactive import InteractionPipeline, ChoiceInteraction, GatherPlayersView
 
-from econfig import PATH_EXTENSION, PLAYER_GATHER_TIMEOUT, SCRAPE_MAXIMUM
+from econfig import PATH_EXTENSION, SCRAPE_MAXIMUM
 
 
 def replace_rules(content: str) -> str:
@@ -32,17 +34,17 @@ class EGameFactory:
     such as polling, player and context management, scores, etc.
     """
 
-    # pylint: disable=too-many-instance-attributes
+    has_scrape = None
 
-    def __init__(self, context, logger_name: str):
+    def __init__(self, interaction: discord.Interaction, logger_name: str):
         """
         `logger_name` should just be `__name__` of instancing module. Used
         only for logging purposes.
         """
         self.logging = logging.getLogger(logger_name)
 
-        self.guild = context.guild
-        self.channel: discord.TextChannel = context.channel
+        self.guild = interaction.guild
+        self.channel: discord.TextChannel = interaction.channel
 
         # players property
         self._players: Dict[int, discord.User] = {}  # index by id
@@ -86,6 +88,13 @@ class EGameFactory:
             colour=colour,
             **kwargs,
         )
+
+    @classmethod
+    def choices(cls):
+        command_names = ["start", "stop", "scrape" if cls.has_scrape else None]
+        return [
+            Choice(name=name, value=name) for name in command_names if name is not None
+        ]
 
     def _add_score(self, pid: int, value: int):
         """TODO"""
@@ -229,7 +238,7 @@ class EGameFactory:
             reverse=True,
         )
         scoreboard = [
-            f"{i+1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)
+            f"{i + 1}. {self.players[t[0]]}: {t[1]}" for i, t in enumerate(scores)
         ]
 
         em = self.embed("**Global Scores:**\n" + "\n".join(scoreboard))
@@ -252,13 +261,17 @@ class EGameFactory:
         ...
 
     # override
-    async def scrape(self, context) -> str:
+    async def scrape(self, interaction: discord.Interaction) -> str:
         # pylint: disable=unused-argument
         ...
 
-    async def _scrape_channel(self, context, channel_name: str, file_name: str) -> int:
+    async def _scrape_channel(
+        self, interaction: discord.Interaction, channel_name: str, file_name: str
+    ) -> int:
         """TODO"""
-        channel = next(filter(lambda c: c.name == channel_name, context.guild.channels))
+        channel = next(
+            filter(lambda c: c.name == channel_name, interaction.guild.channels)
+        )
 
         message_contents = []
 
@@ -267,7 +280,7 @@ class EGameFactory:
                 message_contents.append(replace_rules(message.content))
             except Exception as e:
                 self.logging.error(
-                    f"Scraping error on {channel_name} in {context.guild.id}: {e}"
+                    f"Scraping error on {channel_name} in {interaction.guild.id}: {e}"
                 )
                 return f"Scraping error {e}."
 
@@ -354,7 +367,7 @@ class EGameFactory:
 
         def decorator(func):
             if max_rounds == 0 and not prompt_continue:
-                raise Exception(
+                raise ValueError(
                     "Cannot call execute_rounds with max_rounds=-1 and prompt_continue=False - doing so would lead to infinite loop."
                 )
 

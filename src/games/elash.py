@@ -38,7 +38,7 @@ class ELash(EGameFactory):
     game_description = ""
     wait_duration = 5
     prompt_duration = 60
-    min_players = 1
+    min_players = 2
     cog_help = "TODO"
 
     has_scrape = True

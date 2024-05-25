@@ -69,7 +69,7 @@ class LashPrompt(discord.ui.View):
         self.stop()
 
 
-class LashGetPromptView(UserUniqueView):
+class LashGetPromptView(UserUniqueView[Tuple[str, str]]):
     def __init__(self, embed, content: Dict[int, Tuple[str, str]], **kwargs):
         super().__init__(embed, "Get prompt", content, **kwargs)
 

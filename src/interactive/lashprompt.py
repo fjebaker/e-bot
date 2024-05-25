@@ -69,15 +69,13 @@ class LashPrompt(discord.ui.View):
         self.stop()
 
 
-class LashGetPromptView(UserUniqueView[Tuple[str, str]]):
+class LashGetPromptView(UserUniqueView[Tuple[str, str], Tuple[str, bool]]):
     def __init__(self, embed, content: Dict[int, Tuple[str, str]], **kwargs):
         super().__init__(embed, "Get prompt", content, **kwargs)
 
-    async def user_input(self, interaction: discord.Interaction):
-        uid = interaction.user.id
-
+    async def get_user_response(self, interaction: discord.Interaction, user_data: Tuple[str, str]):
         # tailor user specific modal with a timeout equal to time remaining
-        content, default = self.content[uid]
+        content, default = user_data
         prompt = LashPrompt(default, timeout=self.time)
         await interaction.response.send_message(
             content=content, view=prompt, ephemeral=True, delete_after=self.time
@@ -90,5 +88,4 @@ class LashGetPromptView(UserUniqueView[Tuple[str, str]]):
             prompt.used_default,
             prompt.outcome,
         )
-        self.responses[uid] = (prompt.outcome, prompt.used_default)
-        self.check_continue()
+        return (prompt.outcome, prompt.used_default)

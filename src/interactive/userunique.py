@@ -11,12 +11,13 @@ from utils import async_context_wrap
 logger = logging.getLogger(__name__)
 
 UserData = TypeVar("UserData")
+ResponseData = TypeVar("ResponseData")
 
-class UserUniqueView(TimedView, Generic[UserData]):
+class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
     def __init__(self, embed, title: str, content: Dict[int, UserData], **kwargs):
         super().__init__(embed, **kwargs)
         self.content = content
-        self.responses = {}
+        self.responses: Dict[int, ResponseData] = {}
         self.interacted = []
 
         btn = discord.ui.Button(
@@ -30,7 +31,7 @@ class UserUniqueView(TimedView, Generic[UserData]):
     ):  # pylint: disable=arguments-differ
         uid = interaction.user.id
         if uid in self.responses or uid in self.interacted:
-            logger.info("User %s has already respondend", interaction.user.name)
+            logger.info("User %s has already responded", interaction.user.name)
             await interaction.response.send_message(
                 "You've already responded", ephemeral=True, delete_after=self.time + 1
             )
@@ -48,8 +49,15 @@ class UserUniqueView(TimedView, Generic[UserData]):
             )
             return False
 
-    # override
     async def user_input(self, interaction: discord.Interaction):
+        uid = interaction.user.id
+        user_data = self.content[uid]
+        # Concrete implementation gets the response
+        self.responses[uid] = await self.get_user_response(interaction, user_data)
+        self.check_continue()
+
+    # override
+    async def get_user_response(self, interaction: discord.Interaction, user_data: UserData) -> ResponseData:
         """Callback for when a user interacts with the button"""
         # pylint: disable=unnecessary-ellipsis
         ...

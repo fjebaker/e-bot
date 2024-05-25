@@ -9,7 +9,7 @@ import discord
 from abstracts import EGameFactory
 
 from interactive import (
-    UserUniqueView,
+    LashGetPromptView,
     PollView,
 )
 
@@ -38,7 +38,7 @@ class ELash(EGameFactory):
     game_description = ""
     wait_duration = 5
     prompt_duration = 60
-    min_players = 2
+    min_players = 1
     cog_help = "TODO"
 
     has_scrape = True
@@ -118,7 +118,7 @@ class ELash(EGameFactory):
 
             # get user inputs
             root_embed = self.embed(f"Round: {game_round} -- Click to get your prompts")
-            view = UserUniqueView(
+            view = LashGetPromptView(
                 root_embed,
                 unique_content,
                 delete_after=True,

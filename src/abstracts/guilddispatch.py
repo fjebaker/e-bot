@@ -184,9 +184,9 @@ class GuildDispatch(commands.Cog):
                 else:
                     instance = factory(interaction)
 
+                await interaction.response.defer()
                 status = await instance.scrape(interaction)
-                return await interaction.response.send_message(embed=self.embed(status))
-
+                return await interaction.followup.send(embed=self.embed(status))
             else:
                 return await interaction.response.send_message(
                     embed=self.embed("Does not require scraping.")

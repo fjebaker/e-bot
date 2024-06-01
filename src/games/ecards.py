@@ -205,7 +205,7 @@ class ECards(EGameFactory):
             em_text = f"This round's prompt: \n**{prompt}**\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
             winner_root_embed = self.embed(em_text)
             winner_view = CardsSelectWinningPromptView(
-                root_embed,
+                em_text,
                 leader,
                 {leader:shuffled_responses},
                 delete_after=True,

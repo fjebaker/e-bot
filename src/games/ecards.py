@@ -187,7 +187,7 @@ class ECards(EGameFactory):
                 # send round result
                 await self.channel.send(
                     embed=self.embed(
-                        f"Only {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default."
+                        f"This round's prompt: \n**{prompt}**\nOnly {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default."
                     )
                 )
 
@@ -202,7 +202,7 @@ class ECards(EGameFactory):
             # Enough responses for a proper vote
             end_str = "\n".join((f"- {i}" for i in shuffled_responses))
 
-            em_text = f"This round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
+            em_text = f"This round's prompt: \n**{prompt}**\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
             message = await self.channel.send(
                 embed=self.embed(
                     em_text

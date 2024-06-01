@@ -200,7 +200,7 @@ class ECards(EGameFactory):
                 return
         else:
             # Enough responses for a proper vote
-            end_str = "\n".join((f"- {i}" for i in shuffled_responses))
+            end_str = "\n".join((f"{EMOJI_FORWARD[index + 1]}: {response}" for index, response in enumerate(shuffled_responses)))
 
             em_text = f"This round's prompt: \n**{prompt}**\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
             winner_root_embed = self.embed(em_text)

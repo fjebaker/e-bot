@@ -6,12 +6,13 @@ from econfig import PLAYER_GATHER_TIMEOUT, TEST_BOT_ENABLED
 from utils import random_emoji, async_context_wrap, TestBotUser
 from utils.lookups import EMOJI_FORWARD
 
+
 class GatherPlayersView(TimedView):
     def __init__(self, embed):
         super().__init__(embed, timeout=PLAYER_GATHER_TIMEOUT)
         self.players = []
         if TEST_BOT_ENABLED:
-            self.players.append((TestBotUser(),EMOJI_FORWARD["robot"]))
+            self.players.append((TestBotUser(), EMOJI_FORWARD["robot"]))
         self.text: str = embed.description
 
         btn = discord.ui.Button(

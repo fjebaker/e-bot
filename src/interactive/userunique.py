@@ -62,7 +62,7 @@ class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
     # override
     async def get_user_response(self, interaction: discord.Interaction, user_data: UserData) -> ResponseData:
         """Callback for when a user interacts with the button"""
-        # pylint: disable=unnecessary-ellipsis
+        # pylint: disable=unused-argument,unnecessary-ellipsis
         ...
 
     def required_responses(self) -> int:

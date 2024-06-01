@@ -67,7 +67,7 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         # tailor user specific modal with a timeout equal to time remaining
         hand = user_data
         prompt = CardsPrompt(hand, timeout=self.time)
-        message_content = "Select a card!\n"+'\n'.join(f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand))
+        message_content = "Select a card!\n" + '\n'.join(f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand))
         await interaction.response.send_message(
             content=message_content, view=prompt, ephemeral=True, delete_after=self.time
         )

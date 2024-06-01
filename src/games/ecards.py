@@ -153,7 +153,7 @@ class ECards(EGameFactory):
         cards_played = {}
         for pid, responseIndex in replies.items():
 
-            if (responseIndex is None):
+            if responseIndex is None:
                 self.logging.info(
                     f"Player {self.players[pid]} did not play a card."
                 )

@@ -50,11 +50,13 @@ class CardsPrompt(discord.ui.View):
 
 class CardsGetPromptView(UserUniqueView[List[str], int]):
     def __init__(
-        self, embed, title: str, leader: int, content: Dict[int, List[str]], **kwargs
+        self, embed, title: str, prompt: str, leader: int, content: Dict[int, List[str]], **kwargs
     ):
+        # pylint: disable=too-many-arguments
         super().__init__(embed, "Select card", content, **kwargs)
         self.title = title
         self.leader = leader
+        self.prompt = prompt
 
     async def get_user_response(
         self, interaction: discord.Interaction, user_data: List[str]
@@ -71,7 +73,7 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         # tailor user specific modal with a timeout equal to time remaining
         hand = user_data
         prompt = CardsPrompt("Result selected", hand, timeout=self.time)
-        message_content = "Select a card!\n" + "\n".join(
+        message_content = f"**{self.prompt}**\nSelect a card!\n" + "\n".join(
             f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand)
         )
         await interaction.response.send_message(

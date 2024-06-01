@@ -141,6 +141,7 @@ class ECards(EGameFactory):
         view = CardsGetPromptView(
             root_embed,
             self.game_name,
+            prompt,
             leader,
             hands,
             delete_after=True,

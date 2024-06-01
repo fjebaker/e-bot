@@ -1,6 +1,6 @@
 import logging
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import discord
 
@@ -82,12 +82,18 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         return len(self.content) - 1  # Exclude leader
 
 
-class CardsSelectWinningPromptView(UserUniqueView[List[str], int]):
-    def __init__(self, embed, leader: int, content: Dict[int, List[str]], **kwargs):
+class CardsSelectWinningPromptView(
+    UserUniqueView[List[Tuple[str, int]], Tuple[str, int]]
+):
+    def __init__(
+        self, embed, leader: int, content: Dict[int, List[Tuple[str, int]]], **kwargs
+    ):
         super().__init__(embed, "Select winner", content, **kwargs)
         self.leader = leader
 
-    async def get_user_response(self, interaction: discord.Interaction, user_data: List[str]):
+    async def get_user_response(
+        self, interaction: discord.Interaction, user_data: List[Tuple[str, int]]
+    ) -> Tuple[str, int]:
         uid = interaction.user.id
         if uid != self.leader:
             await interaction.response.send_message(
@@ -98,9 +104,14 @@ class CardsSelectWinningPromptView(UserUniqueView[List[str], int]):
             return None
 
         # tailor user specific modal with a timeout equal to time remaining
-        prompt = CardsPrompt("Winner selected", user_data, timeout=self.time)
+        prompt = CardsPrompt(
+            "Winner selected", [k for (k, _) in user_data], timeout=self.time
+        )
         await interaction.response.send_message(
-            content="Select a winner", view=prompt, ephemeral=True, delete_after=self.time
+            content="Select a winner",
+            view=prompt,
+            ephemeral=True,
+            delete_after=self.time,
         )
         await prompt.wait()
 
@@ -109,7 +120,7 @@ class CardsSelectWinningPromptView(UserUniqueView[List[str], int]):
             interaction.user.name,
             prompt.result,
         )
-        return prompt.result
+        return user_data[prompt.result]
 
     def required_responses(self) -> int:
         return 1

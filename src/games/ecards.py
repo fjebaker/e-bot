@@ -214,6 +214,7 @@ class ECards(EGameFactory):
 
             choice_response = None
             if TestBotUser.test_bot_id == leader:
+                # pylint: disable=fixme
                 # TODO: when we make this use views, the bot response won't need to reverse engineer the dict like this
                 choice_response = {
                     "response": {

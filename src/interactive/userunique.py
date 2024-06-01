@@ -21,7 +21,7 @@ class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
         self.interacted = []
 
         btn = discord.ui.Button(
-            label="Get prompt", style=discord.ButtonStyle.green, emoji=random_emoji()
+            label=title, style=discord.ButtonStyle.green, emoji=random_emoji()
         )
         btn.callback = async_context_wrap(self, self.user_input)
         self.add_item(btn)
@@ -53,7 +53,9 @@ class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
         uid = interaction.user.id
         user_data = self.content[uid]
         # Concrete implementation gets the response
-        self.responses[uid] = await self.get_user_response(interaction, user_data)
+        response = await self.get_user_response(interaction, user_data)
+        if response is not None:
+            self.responses[uid] = response
         self.check_continue()
 
     # override
@@ -62,8 +64,11 @@ class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
         # pylint: disable=unnecessary-ellipsis
         ...
 
+    def required_responses(self) -> int:
+        return len(self.content)
+
     def check_continue(self):
-        if len(self.responses) == len(self.content):
+        if len(self.responses) == self.required_responses():
             logger.info("All users responded to prompt")
             # stop the timer
             self.time = 1

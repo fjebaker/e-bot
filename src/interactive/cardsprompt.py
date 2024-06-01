@@ -21,8 +21,11 @@ class CardsPrompt(discord.ui.View):
         self.display_response: str = None
 
         for index, card in enumerate(hand):
+            label = card
+            if len(card) > 70:
+                label = f"{card[:69]}\U00002026"
             button = discord.ui.Button(
-                label=card[:79],
+                label=label,
                 emoji=EMOJI_FORWARD[index+1],
                 style=discord.ButtonStyle.green
             )
@@ -67,8 +70,9 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         # tailor user specific modal with a timeout equal to time remaining
         hand = user_data
         prompt = CardsPrompt(hand, timeout=self.time)
+        message_content = "Select a card!\n"+'\n'.join(f"{EMOJI_FORWARD[index+1]}: {card}" for index, card in enumerate(hand))
         await interaction.response.send_message(
-            content="Select a card!", view=prompt, ephemeral=True, delete_after=self.time
+            content=message_content, view=prompt, ephemeral=True, delete_after=self.time
         )
         await prompt.wait()
 

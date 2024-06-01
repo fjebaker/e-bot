@@ -1,6 +1,6 @@
 import logging
 
-from typing import Dict, Tuple, TypeVar, Generic
+from typing import Dict, TypeVar, Generic
 
 import discord
 
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 UserData = TypeVar("UserData")
 ResponseData = TypeVar("ResponseData")
+
 
 class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
     def __init__(self, embed, title: str, content: Dict[int, UserData], **kwargs):

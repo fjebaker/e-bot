@@ -1,18 +1,14 @@
 import logging
-import random
 
 from typing import Dict, List
 
 import discord
 
-from interactive.promptmodal import PromptModal
 from interactive.userunique import UserUniqueView
-from interactive.pipeline import InteractionPipeline
-from interactive.choice import ChoiceInteraction
-from utils.lookups import EMOJI_FORWARD, random_emoji
-from utils import async_context_wrap
+from utils.lookups import EMOJI_FORWARD
 
 logger = logging.getLogger(__name__)
+
 
 class CardsPrompt(discord.ui.View):
     def __init__(self, hand: List[str], **kwargs):
@@ -26,7 +22,7 @@ class CardsPrompt(discord.ui.View):
                 label = f"{card[:69]}\U00002026"
             button = discord.ui.Button(
                 label=label,
-                emoji=EMOJI_FORWARD[index+1],
+                emoji=EMOJI_FORWARD[index + 1],
                 style=discord.ButtonStyle.green
             )
             button.callback = self.generate_callback(index, card)
@@ -51,6 +47,7 @@ class CardsPrompt(discord.ui.View):
         )
         self.stop()
 
+
 class CardsGetPromptView(UserUniqueView[List[str], int]):
     def __init__(self, embed, title: str, leader: int, content: Dict[int, List[str]], **kwargs):
         super().__init__(embed, "Select card", content, **kwargs)
@@ -70,7 +67,7 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         # tailor user specific modal with a timeout equal to time remaining
         hand = user_data
         prompt = CardsPrompt(hand, timeout=self.time)
-        message_content = "Select a card!\n"+'\n'.join(f"{EMOJI_FORWARD[index+1]}: {card}" for index, card in enumerate(hand))
+        message_content = "Select a card!\n"+'\n'.join(f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand))
         await interaction.response.send_message(
             content=message_content, view=prompt, ephemeral=True, delete_after=self.time
         )
@@ -84,4 +81,4 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         return prompt.result
 
     def required_responses(self) -> int:
-        return len(self.content) - 1 # Exclude leader
+        return len(self.content) - 1  # Exclude leader

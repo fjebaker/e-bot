@@ -1,10 +1,12 @@
 import asyncio
 import random
+from typing import Dict
+
 import discord
 
 from abstracts import EGameFactory
 
-from interactive import CardsGetPromptView
+from interactive import CardsGetPromptView, InteractionPipeline, ChoiceInteraction
 
 from utils.misc import dict_reverse_lookup
 
@@ -131,9 +133,6 @@ class ECards(EGameFactory):
         :param prompt: the prompt for the round
         :param hands: the players' hands
         """
-        # immutable pids
-        pids = list(self.players.keys())
-
         # get all message responses
         root_embed = self.embed(f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: \n**{prompt}**")
         view = CardsGetPromptView(
@@ -152,7 +151,7 @@ class ECards(EGameFactory):
         # unpack which card played
         # pid -> str
         cards_played = {}
-        for pid,responseIndex in replies.items():
+        for pid, responseIndex in replies.items():
 
             if (responseIndex is None):
                 self.logging.info(
@@ -200,9 +199,10 @@ class ECards(EGameFactory):
             # Enough responses for a proper vote
             end_str = "\n".join((f"- {i}" for i in shuffled_responses))
 
+            em_text = f"This round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
             message = self.channel.send(
                 embed=self.embed(
-                    f"This round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
+                    em_text
                 )
             )
 

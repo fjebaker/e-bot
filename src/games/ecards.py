@@ -8,6 +8,7 @@ from abstracts import EGameFactory
 
 from interactive import CardsGetPromptView, InteractionPipeline, ChoiceInteraction
 
+from utils import TestBotUser
 from utils.misc import dict_reverse_lookup
 
 
@@ -147,6 +148,8 @@ class ECards(EGameFactory):
 
         # get replies
         replies: Dict[int, int] = view.responses
+        if TestBotUser.test_bot_id in self.players and TestBotUser.test_bot_id != leader:
+            replies[TestBotUser.test_bot_id] = random.choice(range(len(hands[TestBotUser.test_bot_id])))
 
         # unpack which card played
         # pid -> str
@@ -200,7 +203,7 @@ class ECards(EGameFactory):
             end_str = "\n".join((f"- {i}" for i in shuffled_responses))
 
             em_text = f"This round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
-            message = self.channel.send(
+            message = await self.channel.send(
                 embed=self.embed(
                     em_text
                 )
@@ -209,15 +212,26 @@ class ECards(EGameFactory):
             # little pause
             await asyncio.sleep(self.wait_duration)
 
-            # dm the leader to choose
-            leader_ipl = InteractionPipeline(
-                ChoiceInteraction(*shuffled_responses, max_votes=1)
-            )
-            choice_response = await leader_ipl.send_and_watch(
-                await self.players[leader].create_dm(),
-                self.embed("Please vote for the winning prompt."),
-                timeout=31,
-            )
+            choice_response = None
+            if TestBotUser.test_bot_id == leader:
+                # TODO: when we make this use views, the bot response won't need to reverse engineer the dict like this
+                choice_response = {
+                    "response": {
+                        "choice": {
+                            1: random.choice(range(len(shuffled_responses))) + 1
+                        }
+                    }
+                }
+            else:
+                # dm the leader to choose
+                leader_ipl = InteractionPipeline(
+                    ChoiceInteraction(*shuffled_responses, max_votes=1)
+                )
+                choice_response = await leader_ipl.send_and_watch(
+                    await self.players[leader].create_dm(),
+                    self.embed("Please vote for the winning prompt."),
+                    timeout=31,
+                )
 
             # find winning card
             winning_card = ""

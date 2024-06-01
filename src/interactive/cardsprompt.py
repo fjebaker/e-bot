@@ -21,7 +21,7 @@ class CardsPrompt(discord.ui.View):
             button = discord.ui.Button(
                 label="",
                 emoji=EMOJI_FORWARD[index + 1],
-                style=discord.ButtonStyle.green
+                style=discord.ButtonStyle.green,
             )
             button.callback = self.generate_callback(index, card)
             self.add_item(button)
@@ -32,7 +32,9 @@ class CardsPrompt(discord.ui.View):
 
         return _callback
 
-    async def on_button_press(self, interaction: discord.Interaction, index: int, card: str):
+    async def on_button_press(
+        self, interaction: discord.Interaction, index: int, card: str
+    ):
         self.display_response = card
         self.result = index
         await self.resolve(interaction)
@@ -47,12 +49,16 @@ class CardsPrompt(discord.ui.View):
 
 
 class CardsGetPromptView(UserUniqueView[List[str], int]):
-    def __init__(self, embed, title: str, leader: int, content: Dict[int, List[str]], **kwargs):
+    def __init__(
+        self, embed, title: str, leader: int, content: Dict[int, List[str]], **kwargs
+    ):
         super().__init__(embed, "Select card", content, **kwargs)
         self.title = title
         self.leader = leader
 
-    async def get_user_response(self, interaction: discord.Interaction, user_data: List[str]):
+    async def get_user_response(
+        self, interaction: discord.Interaction, user_data: List[str]
+    ):
         uid = interaction.user.id
         if uid == self.leader:
             await interaction.response.send_message(
@@ -65,7 +71,9 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         # tailor user specific modal with a timeout equal to time remaining
         hand = user_data
         prompt = CardsPrompt("Result selected", hand, timeout=self.time)
-        message_content = "Select a card!\n" + '\n'.join(f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand))
+        message_content = "Select a card!\n" + "\n".join(
+            f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand)
+        )
         await interaction.response.send_message(
             content=message_content, view=prompt, ephemeral=True, delete_after=self.time
         )

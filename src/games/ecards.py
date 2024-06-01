@@ -4,7 +4,7 @@ import discord
 
 from abstracts import EGameFactory
 
-from interactive import InteractionPipeline, ChoiceInteraction
+from interactive import CardsGetPromptView
 
 from utils.misc import dict_reverse_lookup
 
@@ -118,7 +118,7 @@ class ECards(EGameFactory):
             while len(hands[key]) < 5:
                 hands[key].append(answer_deck.pop())
 
-    async def execute_round(self, leader: str, prompt: str, hands: dict):
+    async def execute_round(self, leader: int, prompt: str, hands: dict):
         """Executes exactly one round of the game.
 
         This involves
@@ -131,76 +131,36 @@ class ECards(EGameFactory):
         :param prompt: the prompt for the round
         :param hands: the players' hands
         """
-        # announce new round
-        em_text = f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: \n**{prompt}**"
-        message = await self.channel.send(embed=self.embed(em_text))
-
         # immutable pids
         pids = list(self.players.keys())
 
-        # construct content
-        content_dict = {
-            pid: (
-                self.embed(
-                    f"This round's prompt: {prompt}\nYou're the leader for this round - sit back and relax!"
-                )
-                if pid == leader
-                else self.embed(f"**{prompt}**")
-            )
-            for pid in pids
-        }
-
         # get all message responses
-        tasks = []
-        for pid in pids:
-            # get channel
-            dm_channel = await self.players[pid].create_dm()
+        root_embed = self.embed(f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: \n**{prompt}**")
+        view = CardsGetPromptView(
+            root_embed,
+            self.game_name,
+            leader,
+            hands,
+            delete_after=True,
+            timeout=31,
+        )
+        await view.send_and_wait(self.channel)
 
-            if pid != leader:
-                # make pipeline
-                ipl = InteractionPipeline(ChoiceInteraction(*hands[pid], max_votes=1))
-
-                # send message by storing coroutine
-                tasks.append(
-                    ipl.send_and_watch(dm_channel, content_dict[pid], timeout=31)
-                )
-            else:
-                # leader
-                tasks.append(dm_channel.send(embed=content_dict[pid]))
-
-        # await routines
-        dm_response = {
-            # ensure type consistent output
-            pid: resp if pid != leader else {}
-            for pid, resp in zip(pids, await asyncio.gather(*tasks))
-        }
+        # get replies
+        replies: Dict[int, int] = view.responses
 
         # unpack which card played
         # pid -> str
         cards_played = {}
-        for pid, resp in dm_response.items():
-            # make sure result is present
-            if "choice" in resp.get("response", {}):
-                # invert choices:
-                inverted = {v: k for k, v in resp["response"]["choice"].items()}
+        for pid,responseIndex in replies.items():
 
-                # get, or falsey (min enumeration is 1)
-                index = inverted.get(1, 0)
-
-                if index:
-                    index = inverted[1] - 1
-                    cards_played[pid] = hands[pid].pop(index)
-                    self.logging.info(f"player {pid} chose {index}")
-
-                else:
-                    # no card: log for now
-                    self.logging.info(
-                        f"Player {self.players[pid]} did not play a card."
-                    )
-
-            elif pid != leader:
-                # log warning
-                self.logging.warning(f"Bad response from {self.players[pid]}: {resp}")
+            if (responseIndex is None):
+                self.logging.info(
+                    f"Player {self.players[pid]} did not play a card."
+                )
+            else:
+                cards_played[pid] = hands[pid].pop(responseIndex)
+                self.logging.info(f"player {pid} chose {responseIndex}")
 
         # shuffle responses to list
         shuffled_responses = list(cards_played.values())
@@ -210,10 +170,9 @@ class ECards(EGameFactory):
 
         if len(shuffled_responses) == 0:
             # No-one played a card - skip the round
-            await message.edit(
+            await self.channel.send(
                 embed=self.embed(
-                    em_text
-                    + "\n\nNo-one played a card. Are the players even there? Skipping this round..."
+                    "No-one played a card. Are the players even there? Skipping this round..."
                 )
             )
             return
@@ -223,11 +182,10 @@ class ECards(EGameFactory):
             winning_card = shuffled_responses[0]
             winning_pid = dict_reverse_lookup(cards_played, winning_card)
             if winning_pid:
-                # update message channel with round result
-                await message.edit(
+                # send round result
+                await self.channel.send(
                     embed=self.embed(
-                        em_text
-                        + f"\n\nOnly {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default."
+                        f"Only {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default."
                     )
                 )
 
@@ -242,11 +200,11 @@ class ECards(EGameFactory):
             # Enough responses for a proper vote
             end_str = "\n".join((f"- {i}" for i in shuffled_responses))
 
-            em_text = (
-                em_text
-                + f"\n\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
+            message = self.channel.send(
+                embed=self.embed(
+                    f"This round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
+                )
             )
-            await message.edit(embed=self.embed(em_text))
 
             # little pause
             await asyncio.sleep(self.wait_duration)

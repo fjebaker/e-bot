@@ -1,92 +1,28 @@
 import logging
 
-from typing import Dict, Tuple
+from typing import Dict, TypeVar, Generic
 
 import discord
 
 from interactive.timedview import TimedView
-from utils.lookups import EMOJI_FORWARD, random_emoji
+from utils.lookups import random_emoji
 from utils import async_context_wrap
 
 logger = logging.getLogger(__name__)
 
-
-class PromptModal(discord.ui.Modal, title="e-bot"):
-    response = discord.ui.TextInput(label="Answer")
-
-    async def on_submit(self, interaction: discord.Interaction):
-        # pylint: disable=arguments-differ,attribute-defined-outside-init
-        self.stop()
-        self.interaction = interaction
-        self.answer = self.response.value
+UserData = TypeVar("UserData")
+ResponseData = TypeVar("ResponseData")
 
 
-class UserPrompt(discord.ui.View):
-    def __init__(self, default_outcome: str, **kwargs):
-        super().__init__(**kwargs)
-        self.outcome: str = None
-        self.default = default_outcome
-        self.used_default = False
-
-        enter_text_button = discord.ui.Button(
-            label="Enter text", emoji=random_emoji(), style=discord.ButtonStyle.green
-        )
-        enter_text_button.callback = async_context_wrap(self, self.user_input)
-
-        self.add_item(enter_text_button)
-
-    @discord.ui.button(
-        label="Safety",
-        emoji=EMOJI_FORWARD["temperature"],
-        style=discord.ButtonStyle.blurple,
-    )
-    async def safety(self, interaction: discord.Interaction, button):
-        # pylint: disable=unused-argument
-        self.outcome = None
-        await self.resolve(interaction.message, interaction)
-
-    async def user_input(self, interaction: discord.Interaction):
-        modal = PromptModal()
-        await interaction.response.send_modal(modal)
-        # wait for response
-        await modal.wait()
-
-        self.outcome = modal.answer
-        await self.resolve(interaction.message, modal.interaction)
-
-    async def on_timeout(self):
-        self.outcome = self.default
-        self.used_default = True
-
-    async def resolve(self, message: discord.Message, interaction: discord.Interaction):
-        # pylint: disable=fixme,unused-argument
-        # TODO: want to be able to delete old messages
-        # but this doesn't work :/
-        # await message.delete()
-
-        if not self.outcome:
-            # use default if no outcome yet given
-            self.outcome = self.default
-            text = f"Safety used: {self.outcome}"
-            self.used_default = True
-        else:
-            text = f"Response submitted: {self.outcome}"
-
-        await interaction.response.send_message(
-            content=text, delete_after=10, ephemeral=True
-        )
-        self.stop()
-
-
-class UserUniqueView(TimedView):
-    def __init__(self, embed, content: Dict[int, Tuple[str, str]], **kwargs):
+class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
+    def __init__(self, embed, title: str, content: Dict[int, UserData], **kwargs):
         super().__init__(embed, **kwargs)
         self.content = content
-        self.responses = {}
+        self.responses: Dict[int, ResponseData] = {}
         self.interacted = []
 
         btn = discord.ui.Button(
-            label="Get prompt", style=discord.ButtonStyle.green, emoji=random_emoji()
+            label=title, style=discord.ButtonStyle.green, emoji=random_emoji()
         )
         btn.callback = async_context_wrap(self, self.user_input)
         self.add_item(btn)
@@ -96,7 +32,7 @@ class UserUniqueView(TimedView):
     ):  # pylint: disable=arguments-differ
         uid = interaction.user.id
         if uid in self.responses or uid in self.interacted:
-            logger.info("User %s has already respondend", interaction.user.name)
+            logger.info("User %s has already responded", interaction.user.name)
             await interaction.response.send_message(
                 "You've already responded", ephemeral=True, delete_after=self.time + 1
             )
@@ -116,26 +52,24 @@ class UserUniqueView(TimedView):
 
     async def user_input(self, interaction: discord.Interaction):
         uid = interaction.user.id
-
-        # tailor user specific modal with a timeout equal to time remaining
-        content, default = self.content[uid]
-        prompt = UserPrompt(default, timeout=self.time)
-        await interaction.response.send_message(
-            content=content, view=prompt, ephemeral=True, delete_after=self.time
-        )
-        await prompt.wait()
-
-        logger.info(
-            "User %s response: %d '%s'",
-            interaction.user.name,
-            prompt.used_default,
-            prompt.outcome,
-        )
-        self.responses[uid] = (prompt.outcome, prompt.used_default)
+        user_data = self.content[uid]
+        # Concrete implementation gets the response
+        response = await self.get_user_response(interaction, user_data)
+        if response is not None:
+            self.responses[uid] = response
         self.check_continue()
 
+    # override
+    async def get_user_response(self, interaction: discord.Interaction, user_data: UserData) -> ResponseData:
+        """Callback for when a user interacts with the button"""
+        # pylint: disable=unused-argument,unnecessary-ellipsis
+        ...
+
+    def required_responses(self) -> int:
+        return len(self.content)
+
     def check_continue(self):
-        if len(self.responses) == len(self.content):
+        if len(self.responses) == self.required_responses():
             logger.info("All users responded to prompt")
             # stop the timer
             self.time = 1

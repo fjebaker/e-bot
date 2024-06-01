@@ -6,5 +6,6 @@ from interactive.message import MessageInteraction
 from interactive.choice import ChoiceInteraction
 from interactive.messagechoice import MessageChoiceInteraction
 
-from interactive.userunique import UserUniqueView
+from interactive.lashprompt import LashGetPromptView
+from interactive.cardsprompt import CardsGetPromptView
 from interactive.gatherplayers import GatherPlayersView

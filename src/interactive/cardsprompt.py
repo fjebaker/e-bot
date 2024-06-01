@@ -17,11 +17,8 @@ class CardsPrompt(discord.ui.View):
         self.display_response: str = None
 
         for index, card in enumerate(hand):
-            label = card
-            if len(card) > 70:
-                label = f"{card[:69]}\U00002026"
             button = discord.ui.Button(
-                label=label,
+                label="",
                 emoji=EMOJI_FORWARD[index + 1],
                 style=discord.ButtonStyle.green
             )

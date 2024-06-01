@@ -6,7 +6,7 @@ import discord
 
 from abstracts import EGameFactory
 
-from interactive import CardsGetPromptView, InteractionPipeline, ChoiceInteraction
+from interactive import CardsGetPromptView, CardsSelectWinningPromptView, InteractionPipeline, ChoiceInteraction
 
 from utils import TestBotUser
 from utils.misc import dict_reverse_lookup
@@ -203,36 +203,21 @@ class ECards(EGameFactory):
             end_str = "\n".join((f"- {i}" for i in shuffled_responses))
 
             em_text = f"This round's prompt: \n**{prompt}**\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
-            message = await self.channel.send(
-                embed=self.embed(
-                    em_text
-                )
+            winner_root_embed = self.embed(em_text)
+            winner_view = CardsSelectWinningPromptView(
+                root_embed,
+                leader,
+                {leader:shuffled_responses},
+                delete_after=True,
+                timeout=31,
             )
+            await winner_view.send_and_wait(self.channel)
 
-            # little pause
-            await asyncio.sleep(self.wait_duration)
-
-            choice_response = None
+            winner_replies: Dict[int, int] = winner_view.responses
             if TestBotUser.test_bot_id == leader:
-                # pylint: disable=fixme
-                # TODO: when we make this use views, the bot response won't need to reverse engineer the dict like this
-                choice_response = {
-                    "response": {
-                        "choice": {
-                            1: random.choice(range(len(shuffled_responses))) + 1
-                        }
-                    }
-                }
-            else:
-                # dm the leader to choose
-                leader_ipl = InteractionPipeline(
-                    ChoiceInteraction(*shuffled_responses, max_votes=1)
-                )
-                choice_response = await leader_ipl.send_and_watch(
-                    await self.players[leader].create_dm(),
-                    self.embed("Please vote for the winning prompt."),
-                    timeout=31,
-                )
+                winner_replies[TestBotUser.test_bot_id] = random.choice(range(len(shuffled_responses)))
+            
+            choice_response = winner_replies[leader]
 
             # find winning card
             winning_card = ""
@@ -251,10 +236,9 @@ class ECards(EGameFactory):
                 await asyncio.sleep(self.wait_duration)
 
                 # message channel with round result
-                await message.edit(
+                await self.channel.send(
                     embed=self.embed(
-                        em_text
-                        + f"\n\nThe winning answer:\n**{winning_card}**\n(answer from {self.players[winning_pid]})"
+                        f"The winning answer:\n**{winning_card}**\n(answer from {self.players[winning_pid]})"
                     )
                 )
 
@@ -264,10 +248,9 @@ class ECards(EGameFactory):
             else:
                 # update scoreboard
                 self._add_score(leader, -1)
-                await message.edit(
+                await self.channel.send(
                     embed=self.embed(
-                        em_text
-                        + f"\n\nNo winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
+                        f"No winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
                     )
                 )
                 return

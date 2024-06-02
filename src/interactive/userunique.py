@@ -60,7 +60,9 @@ class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
         self.check_continue()
 
     # override
-    async def get_user_response(self, interaction: discord.Interaction, user_data: UserData) -> ResponseData:
+    async def get_user_response(
+        self, interaction: discord.Interaction, user_data: UserData
+    ) -> ResponseData:
         """Callback for when a user interacts with the button"""
         # pylint: disable=unused-argument,unnecessary-ellipsis
         ...

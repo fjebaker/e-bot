@@ -73,7 +73,9 @@ class LashGetPromptView(UserUniqueView[Tuple[str, str], Tuple[str, bool]]):
     def __init__(self, embed, content: Dict[int, Tuple[str, str]], **kwargs):
         super().__init__(embed, "Get prompt", content, **kwargs)
 
-    async def get_user_response(self, interaction: discord.Interaction, user_data: Tuple[str, str]):
+    async def get_user_response(
+        self, interaction: discord.Interaction, user_data: Tuple[str, str]
+    ):
         # tailor user specific modal with a timeout equal to time remaining
         content, default = user_data
         prompt = LashPrompt(default, timeout=self.time)

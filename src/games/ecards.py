@@ -1,15 +1,15 @@
 import asyncio
 import random
-from typing import Dict
+from typing import Dict, Tuple
 
 import discord
 
 from abstracts import EGameFactory
 
-from interactive import CardsGetPromptView, InteractionPipeline, ChoiceInteraction
+from interactive import CardsGetPromptView, CardsSelectWinningPromptView
 
 from utils import TestBotUser
-from utils.misc import dict_reverse_lookup
+from utils.lookups import EMOJI_FORWARD
 
 
 class ECards(EGameFactory):
@@ -135,10 +135,13 @@ class ECards(EGameFactory):
         :param hands: the players' hands
         """
         # get all message responses
-        root_embed = self.embed(f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: \n**{prompt}**")
+        root_embed = self.embed(
+            f"Starting new round -- {self.players[leader]} is leader.\nThis round's prompt: \n**{prompt}**"
+        )
         view = CardsGetPromptView(
             root_embed,
             self.game_name,
+            prompt,
             leader,
             hands,
             delete_after=True,
@@ -148,8 +151,13 @@ class ECards(EGameFactory):
 
         # get replies
         replies: Dict[int, int] = view.responses
-        if TestBotUser.test_bot_id in self.players and TestBotUser.test_bot_id != leader:
-            replies[TestBotUser.test_bot_id] = random.choice(range(len(hands[TestBotUser.test_bot_id])))
+        if (
+            TestBotUser.test_bot_id in self.players
+            and TestBotUser.test_bot_id != leader
+        ):
+            replies[TestBotUser.test_bot_id] = random.choice(
+                range(len(hands[TestBotUser.test_bot_id]))
+            )
 
         # unpack which card played
         # pid -> str
@@ -157,15 +165,13 @@ class ECards(EGameFactory):
         for pid, responseIndex in replies.items():
 
             if responseIndex is None:
-                self.logging.info(
-                    f"Player {self.players[pid]} did not play a card."
-                )
+                self.logging.info(f"Player {self.players[pid]} did not play a card.")
             else:
                 cards_played[pid] = hands[pid].pop(responseIndex)
                 self.logging.info(f"player {pid} chose {responseIndex}")
 
         # shuffle responses to list
-        shuffled_responses = list(cards_played.values())
+        shuffled_responses = [(v, k) for (k, v) in cards_played.items()]
         random.shuffle(shuffled_responses)
 
         await asyncio.sleep(self.wait_duration)
@@ -181,96 +187,67 @@ class ECards(EGameFactory):
 
         elif len(shuffled_responses) == 1:
             # Only one person played a card - award them the victory
-            winning_card = shuffled_responses[0]
-            winning_pid = dict_reverse_lookup(cards_played, winning_card)
-            if winning_pid:
-                # send round result
-                await self.channel.send(
-                    embed=self.embed(
-                        f"This round's prompt: \n**{prompt}**\nOnly {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default."
-                    )
-                )
-
-                # update scoreboard
-                return self._add_score(winning_pid, 1)
-            else:
-                self.logging.warning(
-                    f"{winning_card} not in {cards_played}:: {shuffled_responses}."
-                )
-                return
-        else:
-            # Enough responses for a proper vote
-            end_str = "\n".join((f"- {i}" for i in shuffled_responses))
-
-            em_text = f"This round's prompt: \n**{prompt}**\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
-            message = await self.channel.send(
+            winning_card, winning_pid = shuffled_responses[0]
+            # send round result
+            await self.channel.send(
                 embed=self.embed(
-                    em_text
+                    f"This round's prompt: \n**{prompt}**\nOnly {self.players[winning_pid]} played a card:\n{winning_card}\nThey win the round by default."
                 )
             )
+
+            # update scoreboard
+            return self._add_score(winning_pid, 1)
+        else:
+            # Enough responses for a proper vote
+            end_str = "\n".join(
+                (
+                    f"{EMOJI_FORWARD[index + 1]}: {response}"
+                    for index, (response, _) in enumerate(shuffled_responses)
+                )
+            )
+
+            em_text = f"This round's prompt: \n**{prompt}**\nThis round's answers:\n{end_str}\nAwaiting choice of a winner from **{self.players[leader]}**."
+            winner_root_embed = self.embed(em_text)
+            winner_view = CardsSelectWinningPromptView(
+                winner_root_embed,
+                leader,
+                {leader: shuffled_responses},
+                delete_after=True,
+                timeout=31,
+            )
+            await winner_view.send_and_wait(self.channel)
+
+            winner_replies: Dict[int, Tuple[str, int]] = winner_view.responses
+            if TestBotUser.test_bot_id == leader:
+                winner_replies[TestBotUser.test_bot_id] = random.choice(
+                    shuffled_responses
+                )
+
+            choice_response = winner_replies.get(leader, None)
+            if choice_response is None:
+                # update scoreboard
+                self._add_score(leader, -1)
+                await self.channel.send(
+                    embed=self.embed(
+                        f"No winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
+                    )
+                )
+                return
+
+            winning_card, winning_pid = choice_response
 
             # little pause
             await asyncio.sleep(self.wait_duration)
 
-            choice_response = None
-            if TestBotUser.test_bot_id == leader:
-                # pylint: disable=fixme
-                # TODO: when we make this use views, the bot response won't need to reverse engineer the dict like this
-                choice_response = {
-                    "response": {
-                        "choice": {
-                            1: random.choice(range(len(shuffled_responses))) + 1
-                        }
-                    }
-                }
-            else:
-                # dm the leader to choose
-                leader_ipl = InteractionPipeline(
-                    ChoiceInteraction(*shuffled_responses, max_votes=1)
+            # message channel with round result
+            await self.channel.send(
+                embed=self.embed(
+                    f"The winning answer:\n**{winning_card}**\n(answer from {self.players[winning_pid]})"
                 )
-                choice_response = await leader_ipl.send_and_watch(
-                    await self.players[leader].create_dm(),
-                    self.embed("Please vote for the winning prompt."),
-                    timeout=31,
-                )
+            )
 
-            # find winning card
-            winning_card = ""
-            if choice_response:
-                # invert
-                inverted = {
-                    v: k for k, v in choice_response["response"]["choice"].items()
-                }
-                index = inverted.get(1, 0)
-                if index:
-                    winning_card = shuffled_responses[index - 1]
-
-            winning_pid = dict_reverse_lookup(cards_played, winning_card)
-            if winning_pid:
-                # little pause
-                await asyncio.sleep(self.wait_duration)
-
-                # message channel with round result
-                await message.edit(
-                    embed=self.embed(
-                        em_text
-                        + f"\n\nThe winning answer:\n**{winning_card}**\n(answer from {self.players[winning_pid]})"
-                    )
-                )
-
-                # update scoreboard
-                return self._add_score(winning_pid, 1)
-
-            else:
-                # update scoreboard
-                self._add_score(leader, -1)
-                await message.edit(
-                    embed=self.embed(
-                        em_text
-                        + f"\n\nNo winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
-                    )
-                )
-                return
+            # update scoreboard
+            return self._add_score(winning_pid, 1)
 
     async def scrape(self, interaction: discord.Interaction) -> str:
         """TODO"""

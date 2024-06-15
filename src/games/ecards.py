@@ -225,11 +225,12 @@ class ECards(EGameFactory):
 
             choice_response = winner_replies.get(leader, None)
             if choice_response is None:
+                all_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid,card in cards_played.items())
                 # update scoreboard
                 self._add_score(leader, -1)
                 await self.channel.send(
                     embed=self.embed(
-                        f"No winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
+                        f"The prompt: \n**{prompt}**\nThe answers:\n{all_answers}\n\nNo winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
                     )
                 )
                 return
@@ -240,9 +241,10 @@ class ECards(EGameFactory):
             await asyncio.sleep(self.wait_duration)
 
             # message channel with round result
+            other_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid,card in cards_played.items() if pid != winning_pid)
             await self.channel.send(
                 embed=self.embed(
-                    f"The winning answer:\n**{winning_card}**\n(answer from {self.players[winning_pid]})"
+                    f"The prompt: \n**{prompt}**\nThe winning answer:\n**{winning_card}**\n(answer from **{self.players[winning_pid]}**)\nAll other answers:\n{other_answers}"
                 )
             )
 

@@ -202,6 +202,9 @@ class ECards(EGameFactory):
                 )
             )
 
+            # little pause
+            await asyncio.sleep(self.wait_duration)
+
             # update scoreboard
             return self._add_score(winning_pid, 1)
         else:
@@ -251,6 +254,9 @@ class ECards(EGameFactory):
                     f"The prompt: \n**{prompt}**\nThe winning answer:\n**{winning_card}**\n(answer from **{self.players[winning_pid]}**)\nAll other answers:\n{other_answers}"
                 )
             )
+
+            # little pause
+            await asyncio.sleep(self.wait_duration)
 
             # update scoreboard
             return self._add_score(winning_pid, 1)

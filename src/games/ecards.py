@@ -211,7 +211,7 @@ class ECards(EGameFactory):
             winner_view = CardsSelectWinningPromptView(
                 winner_root_embed,
                 leader,
-                {leader: shuffled_responses},
+                {pid: shuffled_responses for pid in self.players},
                 delete_after=True,
                 timeout=31,
             )

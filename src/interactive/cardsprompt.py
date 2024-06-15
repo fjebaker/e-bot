@@ -101,6 +101,12 @@ class CardsSelectWinningPromptView(
         super().__init__(embed, "Select winner", content, **kwargs)
         self.leader = leader
 
+    def get_repeat_interaction_message(self, uid) -> str:
+        if (uid != self.leader):
+            return "Only the leader can vote for the winning answer"
+        else:
+            return super().get_repeat_interaction_message(uid)
+
     async def get_user_response(
         self, interaction: discord.Interaction, user_data: List[Tuple[str, int]]
     ) -> Tuple[str, int]:

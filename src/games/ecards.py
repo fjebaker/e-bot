@@ -150,25 +150,32 @@ class ECards(EGameFactory):
         await view.send_and_wait(self.channel)
 
         # get replies
-        replies: Dict[int, int] = view.responses
+        replies: Dict[int, Tuple[int,bool]] = view.responses
         if (
             TestBotUser.test_bot_id in self.players
             and TestBotUser.test_bot_id != leader
         ):
-            replies[TestBotUser.test_bot_id] = random.choice(
-                range(len(hands[TestBotUser.test_bot_id]))
+            replies[TestBotUser.test_bot_id] = (
+                random.choice(
+                    range(len(hands[TestBotUser.test_bot_id]))
+                ),
+                False
             )
 
         # unpack which card played
         # pid -> str
         cards_played = {}
-        for pid, responseIndex in replies.items():
+        for pid, (responseIndex,redraw) in replies.items():
 
             if responseIndex is None:
                 self.logging.info(f"Player {self.players[pid]} did not play a card.")
             else:
                 cards_played[pid] = hands[pid].pop(responseIndex)
                 self.logging.info(f"player {pid} chose {responseIndex}")
+
+            if redraw:
+                self.logging.info(f"player {pid} chose to redraw")
+                hands[pid].clear()
 
         # shuffle responses to list
         shuffled_responses = [(v, k) for (k, v) in cards_played.items()]

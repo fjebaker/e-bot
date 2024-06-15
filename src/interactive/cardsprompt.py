@@ -1,4 +1,5 @@
 import logging
+import random
 
 from typing import Dict, List, Tuple
 
@@ -16,21 +17,38 @@ class CardsPrompt(discord.ui.View):
         self.result: int = None
         self.display_response: str = None
         self.resolve_text = resolve_text
+        self.hand = hand
+        self.redraw = False
 
         for index, card in enumerate(hand):
             button = discord.ui.Button(
                 label="",
                 emoji=EMOJI_FORWARD[index + 1],
-                style=discord.ButtonStyle.green,
+                style=discord.ButtonStyle.gray,
             )
             button.callback = self.generate_callback(index, card)
             self.add_item(button)
+
+        redraw_button = discord.ui.Button(
+            label="Re-draw hand",
+            emoji=EMOJI_FORWARD["reverse"],
+            style=discord.ButtonStyle.danger
+        )
+        redraw_button.callback = self.on_redraw_press
 
     def generate_callback(self, index: int, card: str):
         async def _callback(interaction: discord.Interaction):
             return await self.on_button_press(interaction, index, card)
 
         return _callback
+    
+    async def on_redraw_press(self, interaction: discord.Interaction):
+        index = random.choice(range(len(self.hand)))
+        self.display_response = self.hand[index]
+        self.result = index
+        self.redraw = True
+        self.resolve_text = "Redrawing hand.\nSelected random response"
+        await self.resolve(interaction)
 
     async def on_button_press(
         self, interaction: discord.Interaction, index: int, card: str
@@ -48,7 +66,7 @@ class CardsPrompt(discord.ui.View):
         self.stop()
 
 
-class CardsGetPromptView(UserUniqueView[List[str], int]):
+class CardsGetPromptView(UserUniqueView[List[str], Tuple[int,bool]]):
     def __init__(
         self, embed, title: str, prompt: str, leader: int, content: Dict[int, List[str]], **kwargs
     ):
@@ -60,7 +78,7 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
 
     async def get_user_response(
         self, interaction: discord.Interaction, user_data: List[str]
-    ):
+    ) -> Tuple[int,bool]:
         uid = interaction.user.id
         if uid == self.leader:
             await interaction.response.send_message(
@@ -86,7 +104,7 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
             interaction.user.name,
             prompt.result,
         )
-        return prompt.result
+        return (prompt.result, prompt.redraw)
 
     def required_responses(self) -> int:
         return len(self.content) - 1  # Exclude leader

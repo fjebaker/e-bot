@@ -1,4 +1,5 @@
 import logging
+import random
 
 from typing import Dict, List, Tuple
 
@@ -21,7 +22,7 @@ class CardsPrompt(discord.ui.View):
             button = discord.ui.Button(
                 label="",
                 emoji=EMOJI_FORWARD[index + 1],
-                style=discord.ButtonStyle.green,
+                style=discord.ButtonStyle.gray,
             )
             button.callback = self.generate_callback(index, card)
             self.add_item(button)
@@ -48,7 +49,38 @@ class CardsPrompt(discord.ui.View):
         self.stop()
 
 
-class CardsGetPromptView(UserUniqueView[List[str], int]):
+class SafetyCardsPrompt(CardsPrompt):
+    def __init__(self, resolve_text: str, hand: List[str], safety: str, **kwargs):
+        super().__init__(resolve_text, hand, **kwargs)
+        self.hand = hand
+        self.redraw = False
+
+        safety_button = discord.ui.Button(
+            label="Play safety",
+            emoji=EMOJI_FORWARD["temperature"],
+            style=discord.ButtonStyle.blurple
+        )
+        safety_button.callback = self.generate_callback(len(hand), safety)
+        self.add_item(safety_button)
+
+        redraw_button = discord.ui.Button(
+            label="Re-draw hand",
+            emoji=EMOJI_FORWARD["reverse"],
+            style=discord.ButtonStyle.danger
+        )
+        redraw_button.callback = self.on_redraw_press
+        self.add_item(redraw_button)
+
+    async def on_redraw_press(self, interaction: discord.Interaction):
+        index = random.choice(range(len(self.hand)))
+        self.display_response = self.hand[index]
+        self.result = index
+        self.redraw = True
+        self.resolve_text = "Redrawing hand.\nSelected random response"
+        await self.resolve(interaction)
+
+
+class CardsGetPromptView(UserUniqueView[List[str], Tuple[int, bool]]):
     def __init__(
         self, embed, title: str, prompt: str, leader: int, content: Dict[int, List[str]], **kwargs
     ):
@@ -58,9 +90,15 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
         self.leader = leader
         self.prompt = prompt
 
+    def get_repeat_interaction_message(self, uid) -> str:
+        if uid == self.leader:
+            return "Seriously! Relax! Chill out! You're the leader!"
+        else:
+            return super().get_repeat_interaction_message(uid)
+
     async def get_user_response(
         self, interaction: discord.Interaction, user_data: List[str]
-    ):
+    ) -> Tuple[int, bool]:
         uid = interaction.user.id
         if uid == self.leader:
             await interaction.response.send_message(
@@ -72,9 +110,11 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
 
         # tailor user specific modal with a timeout equal to time remaining
         hand = user_data
-        prompt = CardsPrompt("Result selected", hand, timeout=self.time)
+        visible_hand = hand[:-1]
+        safety = hand[-1]
+        prompt = SafetyCardsPrompt("Result selected", visible_hand, safety, timeout=self.time)
         message_content = f"**{self.prompt}**\nSelect a card!\n" + "\n".join(
-            f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand)
+            f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(visible_hand)
         )
         await interaction.response.send_message(
             content=message_content, view=prompt, ephemeral=True, delete_after=self.time
@@ -86,7 +126,7 @@ class CardsGetPromptView(UserUniqueView[List[str], int]):
             interaction.user.name,
             prompt.result,
         )
-        return prompt.result
+        return (prompt.result, prompt.redraw)
 
     def required_responses(self) -> int:
         return len(self.content) - 1  # Exclude leader
@@ -100,6 +140,12 @@ class CardsSelectWinningPromptView(
     ):
         super().__init__(embed, "Select winner", content, **kwargs)
         self.leader = leader
+
+    def get_repeat_interaction_message(self, uid) -> str:
+        if uid != self.leader:
+            return "Only the leader can vote for the winning answer"
+        else:
+            return super().get_repeat_interaction_message(uid)
 
     async def get_user_response(
         self, interaction: discord.Interaction, user_data: List[Tuple[str, int]]

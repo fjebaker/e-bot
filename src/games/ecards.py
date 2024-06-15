@@ -32,6 +32,7 @@ class ECards(EGameFactory):
         .e ecards start - start playing a game in the current channel
         .e ecards stop - stop playing the active game
     """
+    hand_size = 6
 
     has_scrape = True
     file_prompts = "data/elash_prompts_{gid}.txt"
@@ -83,7 +84,7 @@ class ECards(EGameFactory):
 
         # create starting hands
         hands = {
-            pid: [answer_deck.pop() for _ in range(5)] for pid in self.players.keys()
+            pid: [answer_deck.pop() for _ in range(self.hand_size)] for pid in self.players.keys()
         }
 
         # run a round for each player
@@ -97,7 +98,7 @@ class ECards(EGameFactory):
         # ensure every player has a hand
         for pid in self.players:
             if pid not in hands:
-                hands[pid] = [answer_deck.pop() for _ in range(5)]
+                hands[pid] = [answer_deck.pop() for _ in range(self.hand_size)]
         # round for each player
         for pid in self.players:
             self.logging.info(
@@ -113,12 +114,13 @@ class ECards(EGameFactory):
         """
         Refills the players' hands from a deck of answers after a round.
         Objects are passed by reference and modifications made in place, hence no need to return.
+        The last item in the hand is a "hidden" card, used if the user chooses to safety.
 
         :param hands: a dictionary mapping player index to player hand
         :param answer_deck: a deck of answer cards to fill hands with
         """
         for key in hands:
-            while len(hands[key]) < 5:
+            while len(hands[key]) < ECards.hand_size:
                 hands[key].append(answer_deck.pop())
 
     async def execute_round(self, leader: int, prompt: str, hands: dict):
@@ -150,19 +152,22 @@ class ECards(EGameFactory):
         await view.send_and_wait(self.channel)
 
         # get replies
-        replies: Dict[int, int] = view.responses
+        replies: Dict[int, Tuple[int, bool]] = view.responses
         if (
             TestBotUser.test_bot_id in self.players
             and TestBotUser.test_bot_id != leader
         ):
-            replies[TestBotUser.test_bot_id] = random.choice(
-                range(len(hands[TestBotUser.test_bot_id]))
+            replies[TestBotUser.test_bot_id] = (
+                random.choice(
+                    range(len(hands[TestBotUser.test_bot_id]))
+                ),
+                False
             )
 
         # unpack which card played
         # pid -> str
         cards_played = {}
-        for pid, responseIndex in replies.items():
+        for pid, (responseIndex, redraw) in replies.items():
 
             if responseIndex is None:
                 self.logging.info(f"Player {self.players[pid]} did not play a card.")
@@ -170,11 +175,13 @@ class ECards(EGameFactory):
                 cards_played[pid] = hands[pid].pop(responseIndex)
                 self.logging.info(f"player {pid} chose {responseIndex}")
 
+            if redraw:
+                self.logging.info(f"player {pid} chose to redraw")
+                hands[pid].clear()
+
         # shuffle responses to list
         shuffled_responses = [(v, k) for (k, v) in cards_played.items()]
         random.shuffle(shuffled_responses)
-
-        await asyncio.sleep(self.wait_duration)
 
         if len(shuffled_responses) == 0:
             # No-one played a card - skip the round
@@ -195,6 +202,9 @@ class ECards(EGameFactory):
                 )
             )
 
+            # little pause
+            await asyncio.sleep(self.wait_duration)
+
             # update scoreboard
             return self._add_score(winning_pid, 1)
         else:
@@ -211,7 +221,7 @@ class ECards(EGameFactory):
             winner_view = CardsSelectWinningPromptView(
                 winner_root_embed,
                 leader,
-                {leader: shuffled_responses},
+                {pid: shuffled_responses for pid in self.players},
                 delete_after=True,
                 timeout=31,
             )
@@ -225,26 +235,28 @@ class ECards(EGameFactory):
 
             choice_response = winner_replies.get(leader, None)
             if choice_response is None:
+                all_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid, card in cards_played.items())
                 # update scoreboard
                 self._add_score(leader, -1)
                 await self.channel.send(
                     embed=self.embed(
-                        f"No winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
+                        f"The prompt: \n**{prompt}**\nThe answers:\n{all_answers}\n\nNo winner chosen. Punishing {self.players[leader]} with -1 point for their insolence!"
                     )
                 )
                 return
 
             winning_card, winning_pid = choice_response
 
-            # little pause
-            await asyncio.sleep(self.wait_duration)
-
             # message channel with round result
+            other_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid, card in cards_played.items() if pid != winning_pid)
             await self.channel.send(
                 embed=self.embed(
-                    f"The winning answer:\n**{winning_card}**\n(answer from {self.players[winning_pid]})"
+                    f"The prompt: \n**{prompt}**\nThe winning answer:\n**{winning_card}**\n(answer from **{self.players[winning_pid]}**)\nAll other answers:\n{other_answers}"
                 )
             )
+
+            # little pause
+            await asyncio.sleep(self.wait_duration)
 
             # update scoreboard
             return self._add_score(winning_pid, 1)

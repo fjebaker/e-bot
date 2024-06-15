@@ -27,6 +27,10 @@ class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
         btn.callback = async_context_wrap(self, self.user_input)
         self.add_item(btn)
 
+    def get_repeat_interaction_message(self, uid) -> str:
+        # pylint: disable=unused-argument
+        return "You've already responded"
+
     async def interaction_check(
         self, interaction: discord.Interaction
     ):  # pylint: disable=arguments-differ
@@ -34,7 +38,7 @@ class UserUniqueView(TimedView, Generic[UserData, ResponseData]):
         if uid in self.responses or uid in self.interacted:
             logger.info("User %s has already responded", interaction.user.name)
             await interaction.response.send_message(
-                "You've already responded", ephemeral=True, delete_after=self.time + 1
+                self.get_repeat_interaction_message(uid), ephemeral=True, delete_after=self.time + 1
             )
             return False
         elif uid in self.content:

@@ -25,6 +25,7 @@ EMOJI_FORWARD = {
     "busts-in-silhouette": "\U0001F465",
     "stop-sign": "\U0001F601",
     "robot": "\U0001F916",
+    "reverse": "\U0001F504"
 }
 # reverse
 EMOJI_BACKWARD = {v: k for k, v in EMOJI_FORWARD.items()}

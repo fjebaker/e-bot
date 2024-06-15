@@ -183,8 +183,6 @@ class ECards(EGameFactory):
         shuffled_responses = [(v, k) for (k, v) in cards_played.items()]
         random.shuffle(shuffled_responses)
 
-        await asyncio.sleep(self.wait_duration)
-
         if len(shuffled_responses) == 0:
             # No-one played a card - skip the round
             await self.channel.send(
@@ -245,9 +243,6 @@ class ECards(EGameFactory):
                 return
 
             winning_card, winning_pid = choice_response
-
-            # little pause
-            await asyncio.sleep(self.wait_duration)
 
             # message channel with round result
             other_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid, card in cards_played.items() if pid != winning_pid)

@@ -32,6 +32,7 @@ class ECards(EGameFactory):
         .e ecards start - start playing a game in the current channel
         .e ecards stop - stop playing the active game
     """
+    hand_size = 6
 
     has_scrape = True
     file_prompts = "data/elash_prompts_{gid}.txt"
@@ -83,7 +84,7 @@ class ECards(EGameFactory):
 
         # create starting hands
         hands = {
-            pid: [answer_deck.pop() for _ in range(5)] for pid in self.players.keys()
+            pid: [answer_deck.pop() for _ in range(self.hand_size)] for pid in self.players.keys()
         }
 
         # run a round for each player
@@ -97,7 +98,7 @@ class ECards(EGameFactory):
         # ensure every player has a hand
         for pid in self.players:
             if pid not in hands:
-                hands[pid] = [answer_deck.pop() for _ in range(5)]
+                hands[pid] = [answer_deck.pop() for _ in range(self.hand_size)]
         # round for each player
         for pid in self.players:
             self.logging.info(
@@ -113,12 +114,13 @@ class ECards(EGameFactory):
         """
         Refills the players' hands from a deck of answers after a round.
         Objects are passed by reference and modifications made in place, hence no need to return.
+        The last item in the hand is a "hidden" card, used if the user chooses to safety.
 
         :param hands: a dictionary mapping player index to player hand
         :param answer_deck: a deck of answer cards to fill hands with
         """
         for key in hands:
-            while len(hands[key]) < 5:
+            while len(hands[key]) < ECards.hand_size:
                 hands[key].append(answer_deck.pop())
 
     async def execute_round(self, leader: int, prompt: str, hands: dict):

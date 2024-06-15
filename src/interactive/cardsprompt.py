@@ -10,15 +10,12 @@ from utils.lookups import EMOJI_FORWARD
 
 logger = logging.getLogger(__name__)
 
-
 class CardsPrompt(discord.ui.View):
     def __init__(self, resolve_text: str, hand: List[str], **kwargs):
         super().__init__(**kwargs)
         self.result: int = None
         self.display_response: str = None
         self.resolve_text = resolve_text
-        self.hand = hand
-        self.redraw = False
 
         for index, card in enumerate(hand):
             button = discord.ui.Button(
@@ -29,26 +26,11 @@ class CardsPrompt(discord.ui.View):
             button.callback = self.generate_callback(index, card)
             self.add_item(button)
 
-        redraw_button = discord.ui.Button(
-            label="Re-draw hand",
-            emoji=EMOJI_FORWARD["reverse"],
-            style=discord.ButtonStyle.danger
-        )
-        redraw_button.callback = self.on_redraw_press
-
     def generate_callback(self, index: int, card: str):
         async def _callback(interaction: discord.Interaction):
             return await self.on_button_press(interaction, index, card)
 
         return _callback
-    
-    async def on_redraw_press(self, interaction: discord.Interaction):
-        index = random.choice(range(len(self.hand)))
-        self.display_response = self.hand[index]
-        self.result = index
-        self.redraw = True
-        self.resolve_text = "Redrawing hand.\nSelected random response"
-        await self.resolve(interaction)
 
     async def on_button_press(
         self, interaction: discord.Interaction, index: int, card: str
@@ -64,6 +46,37 @@ class CardsPrompt(discord.ui.View):
             content=text, delete_after=10, ephemeral=True
         )
         self.stop()
+
+
+class SafetyCardsPrompt(CardsPrompt):
+    def __init__(self, resolve_text: str, hand: List[str], safety: str, **kwargs):
+        super().__init__(resolve_text, hand, **kwargs)
+        self.hand = hand
+        self.redraw = False
+
+        safety_button = discord.ui.Button(
+            label="Play safety",
+            emoji=EMOJI_FORWARD["temperature"],
+            style=discord.ButtonStyle.blurple
+        )
+        safety_button.callback = self.generate_callback(len(hand), safety)
+        self.add_item(safety_button)
+
+        redraw_button = discord.ui.Button(
+            label="Re-draw hand",
+            emoji=EMOJI_FORWARD["reverse"],
+            style=discord.ButtonStyle.danger
+        )
+        redraw_button.callback = self.on_redraw_press
+        self.add_item(redraw_button)
+
+    async def on_redraw_press(self, interaction: discord.Interaction):
+        index = random.choice(range(len(self.hand)))
+        self.display_response = self.hand[index]
+        self.result = index
+        self.redraw = True
+        self.resolve_text = "Redrawing hand.\nSelected random response"
+        await self.resolve(interaction)
 
 
 class CardsGetPromptView(UserUniqueView[List[str], Tuple[int,bool]]):
@@ -90,9 +103,11 @@ class CardsGetPromptView(UserUniqueView[List[str], Tuple[int,bool]]):
 
         # tailor user specific modal with a timeout equal to time remaining
         hand = user_data
-        prompt = CardsPrompt("Result selected", hand, timeout=self.time)
+        visible_hand = hand[:-1]
+        safety = hand[-1]
+        prompt = SafetyCardsPrompt("Result selected", visible_hand, safety, timeout=self.time)
         message_content = f"**{self.prompt}**\nSelect a card!\n" + "\n".join(
-            f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(hand)
+            f"{EMOJI_FORWARD[index + 1]}: {card}" for index, card in enumerate(visible_hand)
         )
         await interaction.response.send_message(
             content=message_content, view=prompt, ephemeral=True, delete_after=self.time

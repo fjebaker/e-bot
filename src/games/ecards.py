@@ -152,7 +152,7 @@ class ECards(EGameFactory):
         await view.send_and_wait(self.channel)
 
         # get replies
-        replies: Dict[int, Tuple[int,bool]] = view.responses
+        replies: Dict[int, Tuple[int, bool]] = view.responses
         if (
             TestBotUser.test_bot_id in self.players
             and TestBotUser.test_bot_id != leader
@@ -167,7 +167,7 @@ class ECards(EGameFactory):
         # unpack which card played
         # pid -> str
         cards_played = {}
-        for pid, (responseIndex,redraw) in replies.items():
+        for pid, (responseIndex, redraw) in replies.items():
 
             if responseIndex is None:
                 self.logging.info(f"Player {self.players[pid]} did not play a card.")
@@ -234,7 +234,7 @@ class ECards(EGameFactory):
 
             choice_response = winner_replies.get(leader, None)
             if choice_response is None:
-                all_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid,card in cards_played.items())
+                all_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid, card in cards_played.items())
                 # update scoreboard
                 self._add_score(leader, -1)
                 await self.channel.send(
@@ -250,7 +250,7 @@ class ECards(EGameFactory):
             await asyncio.sleep(self.wait_duration)
 
             # message channel with round result
-            other_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid,card in cards_played.items() if pid != winning_pid)
+            other_answers = "\n".join(f"**{self.players[pid]}**: {card}" for pid, card in cards_played.items() if pid != winning_pid)
             await self.channel.send(
                 embed=self.embed(
                     f"The prompt: \n**{prompt}**\nThe winning answer:\n**{winning_card}**\n(answer from **{self.players[winning_pid]}**)\nAll other answers:\n{other_answers}"

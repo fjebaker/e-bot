@@ -10,6 +10,7 @@ from utils.lookups import EMOJI_FORWARD
 
 logger = logging.getLogger(__name__)
 
+
 class CardsPrompt(discord.ui.View):
     def __init__(self, resolve_text: str, hand: List[str], **kwargs):
         super().__init__(**kwargs)
@@ -79,7 +80,7 @@ class SafetyCardsPrompt(CardsPrompt):
         await self.resolve(interaction)
 
 
-class CardsGetPromptView(UserUniqueView[List[str], Tuple[int,bool]]):
+class CardsGetPromptView(UserUniqueView[List[str], Tuple[int, bool]]):
     def __init__(
         self, embed, title: str, prompt: str, leader: int, content: Dict[int, List[str]], **kwargs
     ):
@@ -90,14 +91,14 @@ class CardsGetPromptView(UserUniqueView[List[str], Tuple[int,bool]]):
         self.prompt = prompt
 
     def get_repeat_interaction_message(self, uid) -> str:
-        if (uid == self.leader):
+        if uid == self.leader:
             return "Seriously! Relax! Chill out! You're the leader!"
         else:
             return super().get_repeat_interaction_message(uid)
 
     async def get_user_response(
         self, interaction: discord.Interaction, user_data: List[str]
-    ) -> Tuple[int,bool]:
+    ) -> Tuple[int, bool]:
         uid = interaction.user.id
         if uid == self.leader:
             await interaction.response.send_message(
@@ -141,7 +142,7 @@ class CardsSelectWinningPromptView(
         self.leader = leader
 
     def get_repeat_interaction_message(self, uid) -> str:
-        if (uid != self.leader):
+        if uid != self.leader:
             return "Only the leader can vote for the winning answer"
         else:
             return super().get_repeat_interaction_message(uid)

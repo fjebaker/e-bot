@@ -89,6 +89,12 @@ class CardsGetPromptView(UserUniqueView[List[str], Tuple[int,bool]]):
         self.leader = leader
         self.prompt = prompt
 
+    def get_repeat_interaction_message(self, uid) -> str:
+        if (uid == self.leader):
+            return "Seriously! Relax! Chill out! You're the leader!"
+        else:
+            return super().get_repeat_interaction_message(uid)
+
     async def get_user_response(
         self, interaction: discord.Interaction, user_data: List[str]
     ) -> Tuple[int,bool]:
